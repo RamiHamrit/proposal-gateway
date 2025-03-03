@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +8,7 @@ interface AuthContextProps {
   login: (username: string, password: string, isTeacher: boolean) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUserInfo: (updates: { name?: string; email?: string }) => void;
 }
 
 export const initialTeachers = [
@@ -40,6 +40,7 @@ const AuthContext = createContext<AuthContextProps>({
   login: async () => {},
   signup: async () => {},
   logout: () => {},
+  updateUserInfo: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -202,9 +203,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       description: "تم تسجيل خروجك بنجاح",
     });
   };
+  
+  const updateUserInfo = (updates: { name?: string; email?: string }) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    
+    // Update in the appropriate collection
+    if (user.role === 'student') {
+      setStudents(prev => 
+        prev.map(s => s.id === user.id ? { ...s, ...updates } : s)
+      );
+    } else if (user.role === 'teacher') {
+      setTeachers(prev => 
+        prev.map(t => t.id === user.id ? { ...t, ...updates } : t)
+      );
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ user, status, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, status, login, signup, logout, updateUserInfo }}>
       {children}
     </AuthContext.Provider>
   );

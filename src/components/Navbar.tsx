@@ -1,8 +1,10 @@
 
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
+import UserSettingsDialog from "./UserSettingsDialog";
 
 interface NavbarProps {
   title?: string;
@@ -10,6 +12,7 @@ interface NavbarProps {
 
 const Navbar = ({ title }: NavbarProps) => {
   const { user, logout } = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
@@ -32,6 +35,16 @@ const Navbar = ({ title }: NavbarProps) => {
                   </span>
                 </span>
               </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setSettingsOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -41,6 +54,8 @@ const Navbar = ({ title }: NavbarProps) => {
                 <LogOut className="h-4 w-4 ml-2" />
                 تسجيل الخروج
               </Button>
+              
+              {user && <UserSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
             </>
           ) : (
             <div className="flex gap-2">

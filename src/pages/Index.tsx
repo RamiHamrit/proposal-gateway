@@ -1,20 +1,9 @@
 
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, GraduationCap, User } from "lucide-react";
 
 const Index = () => {
-  useEffect(() => {
-    // Add smooth scroll-in animation to elements
-    const animateElements = document.querySelectorAll('.animate-on-load');
-    setTimeout(() => {
-      animateElements.forEach((el) => {
-        el.classList.add('animate-fade-in');
-      });
-    }, 100);
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-background/80 backdrop-blur-md">
@@ -33,7 +22,7 @@ const Index = () => {
 
       <main className="flex-1 container py-12 md:py-24 lg:py-32">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6 animate-on-load opacity-0">
+          <div className="space-y-6">
             <div>
               <h1 className="font-heading text-4xl lg:text-5xl font-bold tracking-tight">
                 نظام إدارة مشاريع
@@ -61,7 +50,7 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="rounded-lg border bg-card animate-on-load opacity-0">
+          <div className="rounded-lg border bg-card">
             <div className="grid grid-cols-1 divide-y">
               <div className="p-6 flex items-start gap-4">
                 <div className="bg-primary/10 p-3 rounded-full">

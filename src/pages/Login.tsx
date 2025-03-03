@@ -149,12 +149,6 @@ const Login = () => {
                       {teacherLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
                     </Button>
                   </div>
-                  
-                  <div className="mt-4 text-center text-sm text-muted-foreground">
-                    <p>أسماء المستخدمين للأساتذة:</p>
-                    <p>Ahmed (كلمة المرور: Ahmed1234)</p>
-                    <p>Fouad (كلمة المرور: Fouad1234)</p>
-                  </div>
                 </form>
               </TabsContent>
             </Tabs>
