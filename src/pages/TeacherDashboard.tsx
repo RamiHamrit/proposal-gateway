@@ -152,7 +152,6 @@ const TeacherDashboard = () => {
                   <ProposalCard
                     key={proposal.id}
                     proposal={proposal}
-                    projectTitle={selectedProject?.title || ""}
                     onStatusChange={() => {
                       // Refresh proposals after status change
                       if (selectedProject) {

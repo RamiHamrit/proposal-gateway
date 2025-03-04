@@ -97,7 +97,6 @@ const StudentDashboard = () => {
                     project={project}
                     userProposals={userProposals}
                     onDeleteProject={() => {}}
-                    onProposalSubmit={handleRefreshData}
                   />
                 ))}
               </div>
@@ -119,7 +118,6 @@ const StudentDashboard = () => {
                     proposal={proposal}
                     projectTitle={proposal.projectTitle}
                     onStatusChange={handleRefreshData}
-                    className="h-full"
                   />
                 ))}
               </div>
