@@ -61,8 +61,8 @@ const StudentDashboard = () => {
           <div className="flex justify-between items-center flex-wrap gap-4">
             <TabsList>
               <TabsTrigger value="projects">المشاريع المتاحة</TabsTrigger>
-              <TabsTrigger value="proposals">
-                مقترحاتي
+              <TabsTrigger value="proposals" className="flex items-center">
+                <span>مقترحاتي</span>
                 {userProposals.length > 0 && (
                   <span className="mr-2 bg-primary text-primary-foreground rounded-full w-5 h-5 inline-flex items-center justify-center text-xs">
                     {userProposals.length}
