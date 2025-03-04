@@ -16,13 +16,15 @@ interface ProjectCardProps {
   userProposals?: Proposal[];
   onDeleteProject?: (id: string) => void;
   onViewProposals?: (project: Project) => void;
+  onProposalSubmit?: () => void;
 }
 
 const ProjectCard = ({ 
   project, 
   userProposals, 
   onDeleteProject,
-  onViewProposals
+  onViewProposals,
+  onProposalSubmit
 }: ProjectCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [showProposalForm, setShowProposalForm] = useState(false);
@@ -47,6 +49,9 @@ const ProjectCard = ({
   
   const handleSubmitProposal = () => {
     setShowProposalForm(false);
+    if (onProposalSubmit) {
+      onProposalSubmit();
+    }
   };
   
   return (

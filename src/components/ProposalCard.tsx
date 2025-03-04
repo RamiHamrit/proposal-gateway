@@ -46,7 +46,6 @@ const getStatusVariant = (status: Proposal['status']) => {
     case 'pending':
       return 'secondary';
     case 'approved':
-      // Change from 'success' to 'default' to match available variants
       return 'default'; 
     case 'rejected':
       return 'destructive';
