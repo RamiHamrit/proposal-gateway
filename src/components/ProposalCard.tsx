@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,8 @@ const getStatusVariant = (status: Proposal['status']) => {
     case 'pending':
       return 'secondary';
     case 'approved':
-      return 'success';
+      // Change from 'success' to 'default' to match available variants
+      return 'default'; 
     case 'rejected':
       return 'destructive';
     case 'selected':
