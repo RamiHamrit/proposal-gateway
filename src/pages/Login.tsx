@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,17 @@ import { GraduationCap, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("student");
+  
+  // Set initial tab based on URL parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'teacher') {
+      setActiveTab('teacher');
+    }
+  }, [location]);
   
   // Student login state
   const [studentEmail, setStudentEmail] = useState("");

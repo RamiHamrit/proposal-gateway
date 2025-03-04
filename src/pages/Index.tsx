@@ -42,7 +42,7 @@ const Index = () => {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-                <Link to="/login">
+                <Link to="/login?tab=teacher">
                   تسجيل دخول الأساتذة
                   <ArrowLeft className="mr-2 h-4 w-4" />
                 </Link>

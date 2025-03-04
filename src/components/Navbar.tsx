@@ -36,14 +36,16 @@ const Navbar = ({ title }: NavbarProps) => {
                 </span>
               </div>
               
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setSettingsOpen(true)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
+              {user.role === 'student' && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSettingsOpen(true)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              )}
               
               <Button 
                 variant="ghost" 
@@ -55,7 +57,9 @@ const Navbar = ({ title }: NavbarProps) => {
                 تسجيل الخروج
               </Button>
               
-              {user && <UserSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />}
+              {user && user.role === 'student' && (
+                <UserSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+              )}
             </>
           ) : (
             <div className="flex gap-2">
