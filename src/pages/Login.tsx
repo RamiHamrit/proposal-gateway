@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,9 +10,7 @@ import { GraduationCap, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
-  const location = useLocation();
-  const defaultTab = location.search.includes('role=teacher') ? 'teacher' : 'student';
-  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+  const [activeTab, setActiveTab] = useState<string>("student");
   
   // Student login state
   const [studentEmail, setStudentEmail] = useState("");
@@ -66,7 +64,7 @@ const Login = () => {
           
           <CardContent className="pt-0">
             <Tabs 
-              defaultValue={defaultTab} 
+              defaultValue="student" 
               value={activeTab} 
               onValueChange={setActiveTab} 
               className="w-full"

@@ -145,16 +145,6 @@ export const createProposal = (
   
   saveLocalData('projects', updatedProjects);
   
-  // Update the current user in localStorage to reflect the new proposal
-  const currentUser = localStorage.getItem('user');
-  if (currentUser) {
-    const user = JSON.parse(currentUser);
-    if (user.id === studentId) {
-      user.proposals = [...user.proposals, newProposal];
-      localStorage.setItem('user', JSON.stringify(user));
-    }
-  }
-  
   return newProposal;
 };
 
