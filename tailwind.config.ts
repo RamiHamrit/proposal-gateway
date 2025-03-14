@@ -132,8 +132,8 @@ export default {
 				'slide-out': 'slide-out 0.3s ease-out'
 			},
 			fontFamily: {
-				arabic: ['IBM Plex Sans Arabic', 'sans-serif'],
-				heading: ['IBM Plex Sans Arabic', 'sans-serif']
+				arabic: ['Tajawal', 'sans-serif'],
+				heading: ['Amiri', 'serif']
 			}
 		}
 	},
