@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
 
 @tailwind base;
@@ -8,7 +8,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 12%;
 
     --card: 0 0% 100%;
@@ -17,7 +17,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 12%;
 
-    --primary: 210 100% 35%;
+    --primary: 214 100% 48%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 20% 96%;
@@ -109,5 +109,21 @@
   
   .page-transition-exit {
     @apply animate-fade-out;
+  }
+  
+  .auth-container {
+    @apply min-h-screen grid md:grid-cols-2;
+  }
+  
+  .auth-image-panel {
+    @apply bg-slate-300 hidden md:flex flex-col items-center justify-center p-8 relative;
+  }
+  
+  .auth-form-panel {
+    @apply flex flex-col items-center justify-center p-8;
+  }
+  
+  .search-input {
+    @apply flex items-center border rounded-full px-4 py-2 bg-white;
   }
 }
