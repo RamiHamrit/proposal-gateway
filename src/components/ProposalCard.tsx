@@ -1,4 +1,3 @@
-
 import { Proposal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Clock, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useAuth } from "@/context/AuthContext";
-import { updateProposalStatus, deleteProposal } from "@/utils/api";
+import { updateProposalStatus, deleteProposal, getProposalsByProjectId } from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProposalCardProps {
@@ -34,6 +33,21 @@ const ProposalCard = ({
   });
   
   const handleApprove = () => {
+    // Check if there are already approved proposals for this project
+    const projectProposals = getProposalsByProjectId(proposal.projectId);
+    const hasApprovedProposal = projectProposals.some(
+      p => (p.status === 'approved' || p.status === 'selected') && p.id !== proposal.id
+    );
+    
+    if (hasApprovedProposal) {
+      toast({
+        title: "لا يمكن الموافقة",
+        description: "تم بالفعل الموافقة على مقترح آخر لهذا المشروع",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     updateProposalStatus(proposal.id, 'approved');
     toast({
       title: "تمت الموافقة",
