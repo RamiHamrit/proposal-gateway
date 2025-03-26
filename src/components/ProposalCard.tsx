@@ -137,7 +137,7 @@ const ProposalCard = ({
           </Button>
         )}
         
-        {isStudent && proposal.status === 'pending' && (
+        {isStudent && (proposal.status === 'pending' || proposal.status === 'rejected') && (
           <Button size="sm" variant="destructive" onClick={handleDelete}>
             حذف المقترح
           </Button>
