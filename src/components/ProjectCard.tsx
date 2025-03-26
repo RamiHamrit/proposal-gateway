@@ -35,6 +35,11 @@ const ProjectCard = ({
   // Find if the current student has a proposal for this project
   const userProposal = userProposals?.find(p => p.projectId === project.id);
   
+  // Check if student was previously rejected for this project
+  const wasRejectedBefore = userProposals?.some(
+    p => p.projectId === project.id && p.status === 'rejected'
+  );
+  
   // Format date in Arabic
   const formattedDate = formatDistanceToNow(new Date(project.createdAt), {
     addSuffix: true,
@@ -112,6 +117,12 @@ const ProjectCard = ({
                     {userProposal.status === 'approved' && 'تمت الموافقة'}
                     {userProposal.status === 'rejected' && 'تم الرفض'}
                     {userProposal.status === 'selected' && 'تم الاختيار'}
+                  </Badge>
+                ) : wasRejectedBefore ? (
+                  <Badge 
+                    className="mr-auto bg-red-100 text-red-800"
+                  >
+                    تم رفض مقترحك سابقًا
                   </Badge>
                 ) : (
                   <Button 
