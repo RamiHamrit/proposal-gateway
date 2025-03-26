@@ -100,7 +100,7 @@ const ProposalCard = ({
   };
   
   return (
-    <Card className={`card-hover ${proposal.status === 'rejected' ? 'opacity-70' : ''}`}>
+    <Card className="card-hover">
       <CardHeader className="p-4">
         <div className="flex justify-between items-center">
           <CardTitle className="text-md">
