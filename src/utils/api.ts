@@ -114,6 +114,15 @@ export const createProposal = (
     return null;
   }
   
+  // Check if student was previously rejected for this project
+  const wasRejectedBefore = studentProposals.some(
+    proposal => proposal.projectId === projectId && proposal.status === 'rejected'
+  );
+  
+  if (wasRejectedBefore) {
+    return null;
+  }
+  
   const newProposal: Proposal = {
     id: `proposal-${Date.now()}`,
     projectId,
