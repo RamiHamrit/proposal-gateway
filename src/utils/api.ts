@@ -1,3 +1,4 @@
+
 import { Project, Proposal, Student, Teacher } from '@/types';
 import { initialTeachers } from '@/context/AuthContext';
 
@@ -84,6 +85,12 @@ export const getProposalsByStudentId = (studentId: string): Proposal[] => {
   return proposals.filter(proposal => proposal.studentId === studentId);
 };
 
+export const getActiveProposalsByStudentId = (studentId: string): Proposal[] => {
+  const proposals = getProposalsByStudentId(studentId);
+  // Return only pending, approved, or selected proposals (exclude rejected ones)
+  return proposals.filter(proposal => proposal.status !== 'rejected');
+};
+
 export const createProposal = (
   projectId: string, 
   studentId: string, 
@@ -91,16 +98,18 @@ export const createProposal = (
 ): Proposal | null => {
   const proposals = getProposals();
   
-  // Check if student already has 3 proposals
-  const studentProposals = proposals.filter(
-    proposal => proposal.studentId === studentId
-  );
+  // Check if student already has 3 ACTIVE proposals (excluding rejected ones)
+  const activeProposals = getActiveProposalsByStudentId(studentId);
   
-  if (studentProposals.length >= 3) {
+  if (activeProposals.length >= 3) {
     return null;
   }
   
   // Check if student already proposed to this project
+  const studentProposals = proposals.filter(
+    proposal => proposal.studentId === studentId
+  );
+  
   if (studentProposals.some(proposal => proposal.projectId === projectId)) {
     return null;
   }
