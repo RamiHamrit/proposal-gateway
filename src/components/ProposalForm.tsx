@@ -4,7 +4,7 @@ import { Project } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { createProposal, getProposalsByStudentId } from "@/utils/api";
+import { createProposal, getProposalsByStudentId, hasSelectedProposal } from "@/utils/api";
 import { useAuth } from "@/context/AuthContext";
 
 interface ProposalFormProps {
@@ -23,6 +23,17 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
       toast({
         title: "غير مصرح",
         description: "يجب تسجيل الدخول كطالب لتقديم مقترح",
+        variant: "destructive",
+      });
+      onCancel();
+      return;
+    }
+    
+    // Check if student has already selected a final project
+    if (hasSelectedProposal(user.id)) {
+      toast({
+        title: "غير مسموح",
+        description: "لديك مشروع نهائي مختار بالفعل، لا يمكنك التقديم لمشاريع جديدة",
         variant: "destructive",
       });
       onCancel();
@@ -59,7 +70,7 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
       } else {
         toast({
           title: "لم يتم تقديم المقترح",
-          description: "لقد وصلت إلى الحد الأقصى من المقترحات أو قدمت مقترحًا لهذا المشروع بالفعل",
+          description: "لقد وصلت إلى الحد الأقصى من المقترحات أو قدمت مقترحًا لهذا المشروع بالفعل أو اخترت مشروعًا نهائيًا",
           variant: "destructive",
         });
       }

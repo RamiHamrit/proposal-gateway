@@ -27,12 +27,23 @@ export const getActiveProposalsByStudentId = (studentId: string): Proposal[] => 
   return proposals.filter(proposal => proposal.status !== 'rejected');
 };
 
+// New helper function to check if a student has a selected proposal
+export const hasSelectedProposal = (studentId: string): boolean => {
+  const proposals = getProposalsByStudentId(studentId);
+  return proposals.some(proposal => proposal.status === 'selected');
+};
+
 export const createProposal = (
   projectId: string, 
   studentId: string, 
   studentName: string
 ): Proposal | null => {
   const proposals = getProposals();
+  
+  // Check if student already has a selected proposal
+  if (hasSelectedProposal(studentId)) {
+    return null;
+  }
   
   // Check if student already has 3 ACTIVE proposals (excluding rejected ones)
   const activeProposals = getActiveProposalsByStudentId(studentId);

@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import ProposalForm from "./ProposalForm";
 import { useAuth } from "@/context/AuthContext";
+import { hasSelectedProposal } from "@/utils/proposalApi";
 
 interface ProjectCardProps {
   project: Project;
@@ -39,6 +40,9 @@ const ProjectCard = ({
   const wasRejectedBefore = userProposals?.some(
     p => p.projectId === project.id && p.status === 'rejected'
   );
+  
+  // Check if the student has already selected a final project
+  const hasSelectedFinalProject = isStudent && user ? hasSelectedProposal(user.id) : false;
   
   // Format date in Arabic
   const formattedDate = formatDistanceToNow(new Date(project.createdAt), {
@@ -124,14 +128,25 @@ const ProjectCard = ({
                   >
                     تم رفض مقترحك سابقًا
                   </Badge>
+                ) : hasSelectedFinalProject ? (
+                  <Badge 
+                    className="mr-auto bg-blue-100 text-blue-800"
+                  >
+                    لديك مشروع نهائي بالفعل
+                  </Badge>
                 ) : (
                   <Button 
                     onClick={() => setShowProposalForm(true)} 
                     className="ml-auto"
-                    disabled={userProposals && userProposals.length >= 3}
+                    disabled={
+                      (userProposals && userProposals.length >= 3) || 
+                      hasSelectedFinalProject
+                    }
                   >
                     {userProposals && userProposals.length >= 3 
                       ? 'الحد الأقصى للمقترحات (3)' 
+                      : hasSelectedFinalProject
+                      ? 'لديك مشروع نهائي بالفعل'
                       : 'تقديم مقترح'}
                   </Button>
                 )}
