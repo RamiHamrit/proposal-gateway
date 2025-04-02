@@ -61,6 +61,7 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
           title: "تم تقديم المقترح",
           description: "تم تقديم مقترحك بنجاح وهو الآن قيد المراجعة",
         });
+        // Call onSubmit to trigger parent component refresh
         onSubmit();
       } else {
         toast({
@@ -77,6 +78,7 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
       });
     } finally {
       setIsSubmitting(false);
+      onCancel();
     }
   };
   

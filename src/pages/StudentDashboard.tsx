@@ -96,6 +96,7 @@ const StudentDashboard = () => {
                     key={project.id}
                     project={project}
                     userProposals={userProposals}
+                    onProposalSubmit={handleRefreshData}
                     onDeleteProject={() => {}}
                   />
                 ))}
