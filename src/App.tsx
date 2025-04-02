@@ -25,22 +25,18 @@ const ProtectedRoute = ({
 }) => {
   const { user, status } = useAuth();
   
-  // Wait for auth to initialize
   if (status === 'idle') {
     return <div className="min-h-screen flex items-center justify-center">
       <span className="animate-pulse">جاري التحميل...</span>
     </div>;
   }
   
-  // Redirect to login if not authenticated
   if (status === 'unauthenticated') {
     return <Navigate to="/login" replace />;
   }
   
-  // Check role access if specified
-  if (allowedRole && user && user.role !== allowedRole) {
-    // Redirect to the appropriate dashboard based on the user's role
-    return <Navigate to={user.role === 'student' ? '/dashboard/student' : '/dashboard/teacher'} replace />;
+  if (allowedRole && user?.role !== allowedRole) {
+    return <Navigate to="/" replace />;
   }
   
   return element;
@@ -49,7 +45,7 @@ const ProtectedRoute = ({
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { user, status } = useAuth();
+  const { user } = useAuth();
   
   useEffect(() => {
     // Initialize local storage data
@@ -62,11 +58,7 @@ const AppContent = () => {
         <Route 
           path="/" 
           element={
-            status === 'idle' ? (
-              <div className="min-h-screen flex items-center justify-center">
-                <span className="animate-pulse">جاري التحميل...</span>
-              </div>
-            ) : status === 'authenticated' && user ? (
+            user ? (
               <Navigate 
                 to={user.role === 'student' ? '/dashboard/student' : '/dashboard/teacher'} 
                 replace 
@@ -76,43 +68,8 @@ const AppContent = () => {
             )
           } 
         />
-        
-        <Route 
-          path="/login" 
-          element={
-            status === 'idle' ? (
-              <div className="min-h-screen flex items-center justify-center">
-                <span className="animate-pulse">جاري التحميل...</span>
-              </div>
-            ) : status === 'authenticated' && user ? (
-              <Navigate 
-                to={user.role === 'student' ? '/dashboard/student' : '/dashboard/teacher'} 
-                replace 
-              />
-            ) : (
-              <Login />
-            )
-          } 
-        />
-        
-        <Route 
-          path="/signup" 
-          element={
-            status === 'idle' ? (
-              <div className="min-h-screen flex items-center justify-center">
-                <span className="animate-pulse">جاري التحميل...</span>
-              </div>
-            ) : status === 'authenticated' && user ? (
-              <Navigate 
-                to={user.role === 'student' ? '/dashboard/student' : '/dashboard/teacher'} 
-                replace 
-              />
-            ) : (
-              <SignUp />
-            )
-          } 
-        />
-        
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
         <Route
           path="/dashboard/student"
           element={
