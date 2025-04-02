@@ -4,7 +4,7 @@ import { Project } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { createProposal, getProposalsByStudentId, hasSelectedProposal } from "@/utils/api";
+import { createProposal, getProposalsByStudentId, hasSelectedProposal, wasRejectedForProject } from "@/utils/api";
 import { useAuth } from "@/context/AuthContext";
 
 interface ProposalFormProps {
@@ -40,13 +40,8 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
       return;
     }
     
-    // Check if student was previously rejected for this project
-    const studentProposals = getProposalsByStudentId(user.id);
-    const wasRejectedBefore = studentProposals.some(
-      p => p.projectId === project.id && p.status === 'rejected'
-    );
-    
-    if (wasRejectedBefore) {
+    // Check if student was previously rejected for this project (even if deleted)
+    if (wasRejectedForProject(user.id, project.id)) {
       toast({
         title: "غير مسموح",
         description: "تم رفض مقترحك لهذا المشروع مسبقًا، لا يمكنك التقديم مرة أخرى",

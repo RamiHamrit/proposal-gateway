@@ -33,6 +33,13 @@ export const hasSelectedProposal = (studentId: string): boolean => {
   return proposals.some(proposal => proposal.status === 'selected');
 };
 
+// New function to check if a student was previously rejected for a project
+export const wasRejectedForProject = (studentId: string, projectId: string): boolean => {
+  // Get all proposals, including deleted ones with rejection status
+  const rejectedProposals = getLocalData<{studentId: string, projectId: string}[]>('rejectedProposals', []);
+  return rejectedProposals.some(p => p.studentId === studentId && p.projectId === projectId);
+};
+
 export const createProposal = (
   projectId: string, 
   studentId: string, 
@@ -61,12 +68,8 @@ export const createProposal = (
     return null;
   }
   
-  // Check if student was previously rejected for this project
-  const wasRejectedBefore = studentProposals.some(
-    proposal => proposal.projectId === projectId && proposal.status === 'rejected'
-  );
-  
-  if (wasRejectedBefore) {
+  // Check if student was previously rejected for this project (even if deleted)
+  if (wasRejectedForProject(studentId, projectId)) {
     return null;
   }
   
@@ -134,6 +137,24 @@ export const updateProposalStatus = (
   
   if (!updatedProposal) return;
   
+  // If status is rejected, add to rejected proposals tracking
+  if (status === 'rejected') {
+    const rejectedProposals = getLocalData<{studentId: string, projectId: string}[]>('rejectedProposals', []);
+    // Check if this combination doesn't already exist
+    if (!rejectedProposals.some(p => 
+      p.studentId === updatedProposal.studentId && 
+      p.projectId === updatedProposal.projectId
+    )) {
+      saveLocalData('rejectedProposals', [
+        ...rejectedProposals, 
+        {
+          studentId: updatedProposal.studentId,
+          projectId: updatedProposal.projectId
+        }
+      ]);
+    }
+  }
+  
   // Update the student's proposal list
   const students = getLocalData<Student[]>('students', []);
   const updatedStudents = students.map(student => {
@@ -182,6 +203,9 @@ export const deleteProposal = (id: string): void => {
   const proposalToDelete = proposals.find(p => p.id === id);
   
   if (!proposalToDelete) return;
+  
+  // We don't need to do anything special here for rejected proposals
+  // since we're now tracking them separately in 'rejectedProposals'
   
   // Remove from proposals list
   const updatedProposals = proposals.filter(proposal => proposal.id !== id);

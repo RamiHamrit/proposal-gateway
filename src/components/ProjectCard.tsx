@@ -10,7 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import ProposalForm from "./ProposalForm";
 import { useAuth } from "@/context/AuthContext";
-import { hasSelectedProposal } from "@/utils/proposalApi";
+import { hasSelectedProposal, wasRejectedForProject } from "@/utils/api";
 
 interface ProjectCardProps {
   project: Project;
@@ -36,10 +36,10 @@ const ProjectCard = ({
   // Find if the current student has a proposal for this project
   const userProposal = userProposals?.find(p => p.projectId === project.id);
   
-  // Check if student was previously rejected for this project
-  const wasRejectedBefore = userProposals?.some(
-    p => p.projectId === project.id && p.status === 'rejected'
-  );
+  // Check if student was previously rejected for this project (even if deleted)
+  const wasRejectedBefore = isStudent && user ? 
+    wasRejectedForProject(user.id, project.id) : 
+    false;
   
   // Check if the student has already selected a final project
   const hasSelectedFinalProject = isStudent && user ? hasSelectedProposal(user.id) : false;
@@ -140,13 +140,16 @@ const ProjectCard = ({
                     className="ml-auto"
                     disabled={
                       (userProposals && userProposals.length >= 3) || 
-                      hasSelectedFinalProject
+                      hasSelectedFinalProject ||
+                      wasRejectedBefore
                     }
                   >
                     {userProposals && userProposals.length >= 3 
                       ? 'الحد الأقصى للمقترحات (3)' 
                       : hasSelectedFinalProject
                       ? 'لديك مشروع نهائي بالفعل'
+                      : wasRejectedBefore
+                      ? 'تم رفض مقترحك سابقًا'
                       : 'تقديم مقترح'}
                   </Button>
                 )}
