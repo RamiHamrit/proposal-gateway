@@ -11,6 +11,13 @@ interface AuthContextProps {
   updateUserInfo: (updates: { name?: string; email?: string }) => void;
 }
 
+interface AuthProviderProps {
+  children: React.ReactNode;
+  overrideLogin?: (username: string, password: string, isTeacher?: boolean) => Promise<any>;
+  overrideSignup?: (name: string, email: string, password: string) => Promise<any>;
+  overrideLogout?: () => Promise<any>;
+}
+
 export const initialTeachers = [
   {
     id: '1',
@@ -45,7 +52,12 @@ const AuthContext = createContext<AuthContextProps>({
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ 
+  children, 
+  overrideLogin, 
+  overrideSignup, 
+  overrideLogout 
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('idle');
   const { toast } = useToast();
@@ -97,6 +109,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (username: string, password: string, isTeacher: boolean) => {
     try {
       setStatus('idle');
+      
+      // Use overrideLogin if provided (Supabase integration)
+      if (overrideLogin) {
+        await overrideLogin(username, password, isTeacher);
+        return;
+      }
       
       if (isTeacher) {
         // Teacher login
@@ -151,6 +169,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setStatus('idle');
       
+      // Use overrideSignup if provided (Supabase integration)
+      if (overrideSignup) {
+        await overrideSignup(name, email, password);
+        return;
+      }
+      
       // Check if email already exists
       if (students.some(s => s.email === email)) {
         setStatus('unauthenticated');
@@ -195,6 +219,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Use overrideLogout if provided (Supabase integration)
+    if (overrideLogout) {
+      overrideLogout().catch(console.error);
+      return;
+    }
+    
     setUser(null);
     setStatus('unauthenticated');
     localStorage.removeItem('user');
