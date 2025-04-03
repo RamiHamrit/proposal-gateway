@@ -15,6 +15,7 @@ import { hasSelectedProposal, wasRejectedForProject } from "@/utils/api";
 interface ProjectCardProps {
   project: Project;
   userProposals?: Proposal[];
+  onProposalSubmit?: () => void;
   onDeleteProject?: (id: string) => void;
   onViewProposals?: (project: Project) => void;
 }
@@ -22,6 +23,7 @@ interface ProjectCardProps {
 const ProjectCard = ({ 
   project, 
   userProposals, 
+  onProposalSubmit,
   onDeleteProject,
   onViewProposals
 }: ProjectCardProps) => {
@@ -56,6 +58,9 @@ const ProjectCard = ({
   
   const handleSubmitProposal = () => {
     setShowProposalForm(false);
+    if (onProposalSubmit) {
+      onProposalSubmit();
+    }
   };
   
   return (
