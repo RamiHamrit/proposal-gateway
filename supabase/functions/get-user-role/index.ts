@@ -51,7 +51,7 @@ serve(async (req) => {
     // Get the user's role from profiles table
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
-      .select("role")
+      .select("role, name")
       .eq("id", user.id)
       .single();
 
@@ -66,7 +66,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ role: profile.role }),
+      JSON.stringify({ role: profile.role, name: profile.name }),
       { 
         status: 200, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 

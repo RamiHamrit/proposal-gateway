@@ -4,14 +4,20 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Define the user type with role information
+export interface SupabaseUser extends User {
+  role?: 'student' | 'teacher';
+  name?: string;
+}
+
 interface AuthState {
-  user: User | null;
+  user: SupabaseUser | null;
   session: Session | null;
   isLoading: boolean;
 }
 
 interface AuthContextProps extends AuthState {
-  signUp: (email: string, password: string, options?: { name: string, role: 'student' | 'teacher' }) => Promise<void>;
+  signUp: (name: string, email: string, password: string, role?: 'student' | 'teacher') => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateUserProfile: (updates: { name?: string; email?: string }) => Promise<void>;
@@ -27,26 +33,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const { toast } = useToast();
 
+  // Function to get user's role from Supabase
+  const getUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role, name')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Check for active session on component mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setState(prevState => ({
-        ...prevState,
-        session,
-        user: session?.user ?? null,
-        isLoading: false,
-      }));
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        // Get role information
+        const profileData = await getUserRole(session.user.id);
+        
+        // Extend user with role information
+        const extendedUser: SupabaseUser = {
+          ...session.user,
+          role: profileData?.role as 'student' | 'teacher' || 'student',
+          name: profileData?.name || ''
+        };
+        
+        setState({
+          session,
+          user: extendedUser,
+          isLoading: false,
+        });
+      } else {
+        setState(prevState => ({
+          ...prevState,
+          session: null,
+          user: null,
+          isLoading: false,
+        }));
+      }
     });
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setState(prevState => ({
-          ...prevState,
-          session,
-          user: session?.user ?? null,
-          isLoading: false,
-        }));
+      async (_event, session) => {
+        if (session?.user) {
+          // Get role information when auth state changes
+          const profileData = await getUserRole(session.user.id);
+          
+          // Extend user with role information
+          const extendedUser: SupabaseUser = {
+            ...session.user,
+            role: profileData?.role as 'student' | 'teacher' || 'student',
+            name: profileData?.name || ''
+          };
+          
+          setState({
+            session,
+            user: extendedUser,
+            isLoading: false,
+          });
+        } else {
+          setState({
+            session: null,
+            user: null,
+            isLoading: false,
+          });
+        }
       }
     );
 
@@ -56,9 +114,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signUp = async (
+    name: string, 
     email: string, 
     password: string, 
-    options?: { name: string; role: 'student' | 'teacher' }
+    role: 'student' | 'teacher' = 'student'
   ) => {
     try {
       const { error } = await supabase.auth.signUp({
@@ -66,8 +125,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
         options: {
           data: {
-            name: options?.name,
-            role: options?.role || 'student'
+            name,
+            role
           }
         }
       });
@@ -142,16 +201,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // Update profile in the profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: updates.name,
-          ...(updates.email && { email: updates.email }),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', state.user.id);
-      
-      if (error) throw error;
+      if (updates.name || updates.email) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            ...(updates.name && { name: updates.name }),
+            ...(updates.email && { email: updates.email }),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', state.user.id);
+        
+        if (error) throw error;
+      }
       
       toast({
         title: "تم التحديث",
