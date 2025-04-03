@@ -14,6 +14,14 @@ const Navbar = ({ title }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  const handleLogout = () => {
+    try {
+      logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
@@ -50,7 +58,7 @@ const Navbar = ({ title }: NavbarProps) => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={logout}
+                onClick={handleLogout}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <LogOut className="h-4 w-4 ml-2" />
