@@ -14,6 +14,12 @@ export const saveLocalData = <T>(key: string, data: T): void => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
+// Helper to clear auth-related localStorage items
+export const clearAuthData = (): void => {
+  localStorage.removeItem('user');
+  localStorage.removeItem('sb-woxcxuhcrhyoeynmuhtw-auth-token');
+};
+
 // Initialize the local storage with dummy data if needed
 export const initializeData = (): void => {
   // Import needed only in this function

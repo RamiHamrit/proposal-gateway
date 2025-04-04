@@ -4,6 +4,7 @@ import { AuthProvider as SupabaseAuthProvider } from '@/hooks/use-supabase-auth'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthProvidersProps {
   children: React.ReactNode;
@@ -59,6 +60,7 @@ const useLegacyAuthAdapter = () => {
     try {
       console.log("Legacy adapter: Attempting to sign out");
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
         console.error("Logout error in legacy adapter:", error);
         toast({
@@ -68,11 +70,16 @@ const useLegacyAuthAdapter = () => {
         });
         throw error;
       }
+      
       console.log("Legacy adapter: Sign out successful");
       toast({
         title: "تم تسجيل الخروج",
         description: "تم تسجيل خروجك بنجاح",
       });
+      
+      // Clear any cached user data in localStorage
+      localStorage.removeItem('user');
+      
       return true;
     } catch (error) {
       console.error("Logout error:", error);

@@ -26,6 +26,9 @@ const ProtectedRoute = ({
 }) => {
   const { user, status } = useAuth();
   
+  // Added extra logging for debugging auth state
+  console.log("ProtectedRoute check - Status:", status, "User:", user?.id);
+  
   if (status === 'idle') {
     return <div className="min-h-screen flex items-center justify-center">
       <span className="animate-pulse">جاري التحميل...</span>
@@ -33,10 +36,12 @@ const ProtectedRoute = ({
   }
   
   if (status === 'unauthenticated') {
+    console.log("User not authenticated, redirecting to login");
     return <Navigate to="/login" replace />;
   }
   
   if (allowedRole && user?.role !== allowedRole) {
+    console.log(`User role ${user?.role} does not match required role ${allowedRole}, redirecting to home`);
     return <Navigate to="/" replace />;
   }
   
@@ -46,15 +51,21 @@ const ProtectedRoute = ({
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { user } = useAuth();
+  const { user, status } = useAuth();
   
   useEffect(() => {
     // Initialize local storage data
     initializeData();
-  }, []);
+    
+    // Log auth status changes for debugging
+    console.log("App auth status changed:", status, user?.id);
+  }, [user, status]);
+  
+  // Force re-evaluate routes when auth status changes
+  const key = `auth-${status}-${user?.id || "none"}`;
   
   return (
-    <BrowserRouter>
+    <BrowserRouter key={key}>
       <Routes>
         <Route 
           path="/" 

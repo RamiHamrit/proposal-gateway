@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LogOut, Settings, User } from "lucide-react";
 import UserSettingsDialog from "./UserSettingsDialog";
 
@@ -14,13 +14,17 @@ const Navbar = ({ title }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
       console.log("Navbar: Logout button clicked");
       await logout();
-      console.log("Navbar: Logout completed");
+      console.log("Navbar: Logout completed, redirecting to home");
+      
+      // Force navigation to home page after successful logout
+      navigate('/', { replace: true });
     } catch (error) {
       console.error("Navbar: Logout error:", error);
     } finally {

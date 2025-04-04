@@ -228,11 +228,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         console.log("AuthContext: Using override logout");
         await overrideLogout();
         console.log("AuthContext: Override logout completed");
-      } else {
+      }
+      
+      // Always reset local state regardless of which logout method was used
+      setUser(null);
+      setStatus('unauthenticated');
+      localStorage.removeItem('user');
+      
+      console.log("AuthContext: Local state cleared, status:", 'unauthenticated');
+      
+      if (!overrideLogout) {
         console.log("AuthContext: Using default logout");
-        setUser(null);
-        setStatus('unauthenticated');
-        localStorage.removeItem('user');
         toast({
           title: "تم تسجيل الخروج",
           description: "تم تسجيل خروجك بنجاح",
