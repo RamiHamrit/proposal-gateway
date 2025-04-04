@@ -3,6 +3,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 // Define the user type with role information
 export interface SupabaseUser extends User {
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading: true,
   });
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Function to get user's role from Supabase
   const getUserRole = async (userId: string) => {
@@ -74,6 +76,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user: extendedUser,
             isLoading: false,
           });
+          
+          console.log("User authenticated as:", profileData?.role);
+          
+          // Navigate based on role
+          if (profileData?.role === 'teacher') {
+            navigate('/dashboard/teacher', { replace: true });
+          } else {
+            navigate('/dashboard/student', { replace: true });
+          }
         } else {
           console.log("Supabase auth: No active session detected in state change");
           setState({
@@ -81,6 +92,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user: null,
             isLoading: false,
           });
+          
+          if (event === 'SIGNED_OUT') {
+            console.log("User signed out, navigating to home");
+            navigate('/', { replace: true });
+          }
         }
       }
     );
@@ -105,6 +121,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           user: extendedUser,
           isLoading: false,
         });
+        
+        console.log("User authenticated as:", profileData?.role);
+        
+        // Navigate based on role
+        if (profileData?.role === 'teacher') {
+          navigate('/dashboard/teacher', { replace: true });
+        } else {
+          navigate('/dashboard/student', { replace: true });
+        }
       } else {
         console.log("Supabase auth: No active session found on initial check");
         setState(prevState => ({
@@ -119,7 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const signUp = async (
     name: string, 
@@ -128,6 +153,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     role: 'student' | 'teacher' = 'student'
   ) => {
     try {
+      console.log("Attempting signup:", name, email, role);
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -146,6 +173,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "يرجى التحقق من بريدك الإلكتروني لتأكيد الحساب",
       });
     } catch (error: any) {
+      console.error("Signup error:", error);
+      
       toast({
         title: "خطأ في إنشاء الحساب",
         description: error.message || "حدث خطأ أثناء محاولة إنشاء الحساب",
@@ -157,6 +186,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting signin:", email);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -169,6 +200,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "مرحباً بعودتك!",
       });
     } catch (error: any) {
+      console.error("Signin error:", error);
+      
       toast({
         title: "فشل تسجيل الدخول",
         description: error.message || "اسم المستخدم أو كلمة المرور غير صحيحة",
@@ -182,12 +215,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log("useSupabaseAuth: Attempting to sign out");
       
-      // First update local state to ensure UI updates immediately
+      // Update local state to ensure UI updates immediately
       setState(prev => ({
         ...prev,
         user: null,
         session: null
       }));
+      
+      // Clear localStorage
+      localStorage.removeItem('user');
+      localStorage.removeItem('sb-woxcxuhcrhyoeynmuhtw-auth-token');
       
       const { error } = await supabase.auth.signOut();
       
@@ -202,13 +239,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "تم تسجيل الخروج",
         description: "تم تسجيل خروجك بنجاح",
       });
+      
+      // Force navigation to home page
+      navigate('/', { replace: true });
     } catch (error: any) {
       console.error("useSupabaseAuth signOut catch error:", error);
+      
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء تسجيل الخروج",
         variant: "destructive",
       });
+      
+      // Even on error, try to redirect
+      navigate('/', { replace: true });
+      
       throw error;
     }
   };

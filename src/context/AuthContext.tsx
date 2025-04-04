@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { getLocalData, saveLocalData, initialTeachers } from '@/utils/localStorage';
 
 interface AuthContextProps {
   user: User | null;
@@ -18,29 +20,6 @@ interface AuthProviderProps {
   overrideSignup?: (name: string, email: string, password: string) => Promise<any>;
   overrideLogout?: () => Promise<any>;
 }
-
-export const initialTeachers = [
-  {
-    id: '1',
-    name: 'أحمد مالكي',
-    username: 'Ahmed',
-    role: 'teacher' as const,
-    projects: [],
-  },
-  {
-    id: '2',
-    name: 'فؤاد حمداوي',
-    username: 'Fouad',
-    role: 'teacher' as const,
-    projects: [],
-  },
-];
-
-// Initial dummy data for testing
-const dummyTeacherPasswords: Record<string, string> = {
-  'Ahmed': 'Ahmed1234',
-  'Fouad': 'Fouad1234',
-};
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
@@ -62,6 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('idle');
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Mock database for local development
   const [students, setStudents] = useState<Student[]>([]);
@@ -82,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     const storedStudents = localStorage.getItem('students');
     const storedTeachers = localStorage.getItem('teachers');
     const storedStudentPasswords = localStorage.getItem('studentPasswords');
+    const storedTeacherPasswords = localStorage.getItem('teacherPasswords');
 
     if (storedStudents) setStudents(JSON.parse(storedStudents));
     if (storedTeachers) setTeachers(JSON.parse(storedTeachers));
@@ -90,8 +71,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     
     // Initialize teachers in localStorage if not present
     if (!storedTeachers) {
+      console.log('Initializing teachers from AuthContext');
       localStorage.setItem('teachers', JSON.stringify(initialTeachers));
     }
+    
+    // Log the loaded data for debugging
+    console.log('Loaded teachers:', storedTeachers ? JSON.parse(storedTeachers) : initialTeachers);
+    console.log('Loaded teacher passwords:', storedTeacherPasswords ? 'Available' : 'Not available');
   }, []);
 
   // Save mock data to localStorage whenever it changes
@@ -110,18 +96,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const login = async (username: string, password: string, isTeacher: boolean) => {
     try {
       setStatus('idle');
+      console.log(`Attempting ${isTeacher ? 'teacher' : 'student'} login:`, username);
       
       // Use overrideLogin if provided (Supabase integration)
       if (overrideLogin) {
+        console.log('Using override login');
         await overrideLogin(username, password, isTeacher);
         return;
       }
       
       if (isTeacher) {
+        console.log('Teacher login flow');
         // Teacher login
-        if (dummyTeacherPasswords[username] === password) {
+        const teacherPasswords = getLocalData<Record<string, string>>('teacherPasswords', {});
+        console.log('Available teacher usernames:', Object.keys(teacherPasswords));
+        
+        if (teacherPasswords[username] === password) {
           const teacher = teachers.find(t => t.username === username);
           if (teacher) {
+            console.log('Teacher found:', teacher);
             setUser(teacher);
             localStorage.setItem('user', JSON.stringify(teacher));
             setStatus('authenticated');
@@ -129,14 +122,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
               title: "تم تسجيل الدخول بنجاح",
               description: `مرحباً، ${teacher.name}`,
             });
+            navigate('/dashboard/teacher');
             return;
           }
         }
       } else {
+        console.log('Student login flow');
         // Student login (using email as username)
         if (studentPasswords[username] === password) {
           const student = students.find(s => s.email === username);
           if (student) {
+            console.log('Student found:', student);
             setUser(student);
             localStorage.setItem('user', JSON.stringify(student));
             setStatus('authenticated');
@@ -144,12 +140,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
               title: "تم تسجيل الدخول بنجاح",
               description: `مرحباً، ${student.name}`,
             });
+            navigate('/dashboard/student');
             return;
           }
         }
       }
       
       // If we reach here, login failed
+      console.log('Login failed - no matching credentials');
       setStatus('unauthenticated');
       toast({
         title: "فشل تسجيل الدخول",
@@ -157,6 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         variant: "destructive",
       });
     } catch (error) {
+      console.error('Login error:', error);
       setStatus('unauthenticated');
       toast({
         title: "خطأ في تسجيل الدخول",
@@ -209,6 +208,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         title: "تم إنشاء الحساب بنجاح",
         description: "تم تسجيل دخولك تلقائياً",
       });
+      
+      navigate('/dashboard/student');
     } catch (error) {
       setStatus('unauthenticated');
       toast({
@@ -226,11 +227,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       // Use overrideLogout if provided (Supabase integration)
       if (overrideLogout) {
         console.log("AuthContext: Using override logout");
-        await overrideLogout();
-        console.log("AuthContext: Override logout completed");
+        try {
+          await overrideLogout();
+        } catch (error) {
+          console.error("Override logout error:", error);
+        }
       }
       
       // Always reset local state regardless of which logout method was used
+      console.log("AuthContext: Clearing local state");
       setUser(null);
       setStatus('unauthenticated');
       localStorage.removeItem('user');
@@ -244,12 +249,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
           description: "تم تسجيل خروجك بنجاح",
         });
       }
+      
+      // Force navigation to home page
+      console.log("AuthContext: Navigating to / after logout");
+      navigate('/');
     } catch (error) {
       console.error("Logout error in AuthContext:", error);
       // Even on error, we should clear the local session
       setUser(null);
       setStatus('unauthenticated');
       localStorage.removeItem('user');
+      navigate('/');
       toast({
         title: "تم تسجيل الخروج",
         description: "تم تسجيل خروجك مع وجود خطأ",

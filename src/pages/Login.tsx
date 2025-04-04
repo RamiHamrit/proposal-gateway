@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,10 +8,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("student");
+  const { toast } = useToast();
   
   // Set initial tab based on URL parameter
   useEffect(() => {
@@ -33,6 +37,7 @@ const Login = () => {
   const [teacherLoading, setTeacherLoading] = useState(false);
   
   const { login } = useAuth();
+  const { signIn } = useSupabaseAuth();
   
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +45,20 @@ const Login = () => {
     if (!studentEmail || !studentPassword) return;
     
     setStudentLoading(true);
-    await login(studentEmail, studentPassword, false);
-    setStudentLoading(false);
+    try {
+      console.log("Attempting student login with:", studentEmail);
+      await signIn(studentEmail, studentPassword);
+      // Navigate is now handled by App.tsx based on auth state
+    } catch (error) {
+      console.error("Student login error:", error);
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: "تحقق من بريدك الإلكتروني وكلمة المرور",
+        variant: "destructive",
+      });
+    } finally {
+      setStudentLoading(false);
+    }
   };
   
   const handleTeacherLogin = async (e: React.FormEvent) => {
@@ -50,8 +67,20 @@ const Login = () => {
     if (!teacherUsername || !teacherPassword) return;
     
     setTeacherLoading(true);
-    await login(teacherUsername, teacherPassword, true);
-    setTeacherLoading(false);
+    try {
+      console.log("Attempting teacher login with username:", teacherUsername);
+      await login(teacherUsername, teacherPassword, true);
+      // Navigate is handled by AuthContext
+    } catch (error) {
+      console.error("Teacher login error:", error);
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: "تحقق من اسم المستخدم وكلمة المرور",
+        variant: "destructive",
+      });
+    } finally {
+      setTeacherLoading(false);
+    }
   };
   
   return (
