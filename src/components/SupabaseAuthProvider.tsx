@@ -1,6 +1,6 @@
 
 import { AuthProvider as LegacyAuthProvider } from '@/context/AuthContext';
-import { AuthProvider as SupabaseAuthProvider, useSupabaseAuth } from '@/hooks/use-supabase-auth';
+import { AuthProvider as SupabaseAuthProvider } from '@/hooks/use-supabase-auth';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,7 +11,6 @@ interface AuthProvidersProps {
 // This custom hook maps Supabase auth to the legacy AuthContext
 const useLegacyAuthAdapter = () => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const { signIn, signUp, signOut } = useSupabaseAuth();
   
   useEffect(() => {
     // Initialize the legacy auth adapter
@@ -21,15 +20,48 @@ const useLegacyAuthAdapter = () => {
   
   // These functions implement the legacy interface using Supabase
   const login = async (email: string, password: string, isTeacher = false) => {
-    return signIn(email, password);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    return signUp(name, email, password, 'student');
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role: 'student'
+          }
+        }
+      });
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    return signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error("Logout error:", error);
+      throw error;
+    }
   };
 
   return {
