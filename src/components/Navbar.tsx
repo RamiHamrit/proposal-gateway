@@ -13,12 +13,18 @@ interface NavbarProps {
 const Navbar = ({ title }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
+      console.log("Navbar: Logout button clicked");
       await logout();
+      console.log("Navbar: Logout completed");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Navbar: Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -60,9 +66,10 @@ const Navbar = ({ title }: NavbarProps) => {
                 size="sm" 
                 onClick={handleLogout}
                 className="text-muted-foreground hover:text-foreground"
+                disabled={isLoggingOut}
               >
                 <LogOut className="h-4 w-4 ml-2" />
-                تسجيل الخروج
+                {isLoggingOut ? "جاري تسجيل الخروج..." : "تسجيل الخروج"}
               </Button>
               
               {user && user.role === 'student' && (

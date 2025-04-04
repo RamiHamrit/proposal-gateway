@@ -51,37 +51,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // Check for active session on component mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        // Get role information
-        const profileData = await getUserRole(session.user.id);
-        
-        // Extend user with role information
-        const extendedUser: SupabaseUser = {
-          ...session.user,
-          role: profileData?.role as 'student' | 'teacher' || 'student',
-          name: profileData?.name || ''
-        };
-        
-        setState({
-          session,
-          user: extendedUser,
-          isLoading: false,
-        });
-      } else {
-        setState(prevState => ({
-          ...prevState,
-          session: null,
-          user: null,
-          isLoading: false,
-        }));
-      }
-    });
-
-    // Set up auth state listener
+    // Set up auth state listener first to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log("Auth state change event:", _event, session?.user?.id);
+        
         if (session?.user) {
           // Get role information when auth state changes
           const profileData = await getUserRole(session.user.id);
@@ -107,6 +81,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     );
+
+    // Then check for active session on component mount
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.id);
+      
+      if (session?.user) {
+        // Get role information
+        const profileData = await getUserRole(session.user.id);
+        
+        // Extend user with role information
+        const extendedUser: SupabaseUser = {
+          ...session.user,
+          role: profileData?.role as 'student' | 'teacher' || 'student',
+          name: profileData?.name || ''
+        };
+        
+        setState({
+          session,
+          user: extendedUser,
+          isLoading: false,
+        });
+      } else {
+        setState(prevState => ({
+          ...prevState,
+          session: null,
+          user: null,
+          isLoading: false,
+        }));
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -172,19 +176,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      console.log("useSupabaseAuth: Attempting to sign out");
+      
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        console.error("useSupabaseAuth signOut error:", error);
+        throw error;
+      }
+      
+      console.log("useSupabaseAuth: Sign out successful");
       
       toast({
         title: "تم تسجيل الخروج",
         description: "تم تسجيل خروجك بنجاح",
       });
     } catch (error: any) {
+      console.error("useSupabaseAuth signOut catch error:", error);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء تسجيل الخروج",
         variant: "destructive",
       });
+      throw error;
     }
   };
 

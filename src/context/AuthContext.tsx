@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +8,7 @@ interface AuthContextProps {
   status: AuthStatus;
   login: (username: string, password: string, isTeacher: boolean) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUserInfo: (updates: { name?: string; email?: string }) => void;
 }
 
@@ -46,7 +47,7 @@ const AuthContext = createContext<AuthContextProps>({
   status: 'idle',
   login: async () => {},
   signup: async () => {},
-  logout: () => {},
+  logout: async () => {},
   updateUserInfo: () => {},
 });
 
@@ -218,20 +219,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     }
   };
 
-  const logout = () => {
-    // Use overrideLogout if provided (Supabase integration)
-    if (overrideLogout) {
-      overrideLogout().catch(console.error);
-      return;
+  const logout = async () => {
+    try {
+      console.log("AuthContext: Attempting logout");
+      
+      // Use overrideLogout if provided (Supabase integration)
+      if (overrideLogout) {
+        console.log("AuthContext: Using override logout");
+        await overrideLogout();
+        console.log("AuthContext: Override logout completed");
+      } else {
+        console.log("AuthContext: Using default logout");
+        setUser(null);
+        setStatus('unauthenticated');
+        localStorage.removeItem('user');
+        toast({
+          title: "تم تسجيل الخروج",
+          description: "تم تسجيل خروجك بنجاح",
+        });
+      }
+    } catch (error) {
+      console.error("Logout error in AuthContext:", error);
+      // Even on error, we should clear the local session
+      setUser(null);
+      setStatus('unauthenticated');
+      localStorage.removeItem('user');
+      toast({
+        title: "تم تسجيل الخروج",
+        description: "تم تسجيل خروجك مع وجود خطأ",
+      });
     }
-    
-    setUser(null);
-    setStatus('unauthenticated');
-    localStorage.removeItem('user');
-    toast({
-      title: "تم تسجيل الخروج",
-      description: "تم تسجيل خروجك بنجاح",
-    });
   };
   
   const updateUserInfo = (updates: { name?: string; email?: string }) => {
