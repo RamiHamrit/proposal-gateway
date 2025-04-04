@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { clearAuthData, teacherPasswords } from '@/utils/localStorage';
+import { clearAuthData, teacherPasswords, getLocalData } from '@/utils/localStorage';
 
 interface AuthProvidersProps {
   children: React.ReactNode;
@@ -21,16 +21,24 @@ const useLegacyAuthAdapter = () => {
     // Initialize the legacy auth adapter
     // This is just to mark that we've initialized the adapter
     setIsInitialized(true);
+    
+    // Debugging: Log available teacher credentials
+    console.log("Available teacher usernames:", Object.keys(teacherPasswords));
   }, []);
   
   // These functions implement the legacy interface using Supabase
-  const login = async (email: string, password: string, isTeacher = false) => {
+  const login = async (username: string, password: string, isTeacher = false) => {
     try {
-      console.log("Legacy adapter login:", isTeacher ? "teacher" : "student", email);
+      console.log("Legacy adapter login:", isTeacher ? "teacher" : "student", username);
       
       if (isTeacher) {
         // Check if this is one of our hardcoded teachers
-        if (teacherPasswords[email] === password) {
+        console.log("Checking teacher credentials for:", username);
+        console.log("Teacher passwords object:", teacherPasswords);
+        console.log("Expected password:", teacherPasswords[username]);
+        console.log("Provided password:", password);
+        
+        if (teacherPasswords[username] === password) {
           console.log("Valid teacher credentials, using legacy login");
           // Let the legacy auth provider handle this
           return false; // Signal that we didn't handle this
@@ -40,9 +48,9 @@ const useLegacyAuthAdapter = () => {
         }
       } else {
         // Student login with Supabase
-        console.log("Student login with Supabase:", email);
+        console.log("Student login with Supabase:", username);
         const { error } = await supabase.auth.signInWithPassword({ 
-          email, 
+          email: username, 
           password 
         });
         if (error) throw error;

@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useSupabaseAuth } from "@/hooks/use-supabase-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -36,19 +35,30 @@ const Login = () => {
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherLoading, setTeacherLoading] = useState(false);
   
-  const { login } = useAuth();
-  const { signIn } = useSupabaseAuth();
+  const { login, status } = useAuth();
+  
+  // Log current auth status for debugging
+  useEffect(() => {
+    console.log("Current auth status:", status);
+  }, [status]);
   
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!studentEmail || !studentPassword) return;
+    if (!studentEmail || !studentPassword) {
+      toast({
+        title: "حقول مطلوبة",
+        description: "يرجى إدخال البريد الإلكتروني وكلمة المرور",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setStudentLoading(true);
     try {
       console.log("Attempting student login with:", studentEmail);
-      await signIn(studentEmail, studentPassword);
-      // Navigate is now handled by App.tsx based on auth state
+      await login(studentEmail, studentPassword, false);
+      // Navigation is handled by AuthContext/App.tsx based on auth state
     } catch (error) {
       console.error("Student login error:", error);
       toast({
@@ -64,7 +74,14 @@ const Login = () => {
   const handleTeacherLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!teacherUsername || !teacherPassword) return;
+    if (!teacherUsername || !teacherPassword) {
+      toast({
+        title: "حقول مطلوبة",
+        description: "يرجى إدخال اسم المستخدم وكلمة المرور",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setTeacherLoading(true);
     try {

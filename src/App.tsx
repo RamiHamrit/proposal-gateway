@@ -7,14 +7,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthProviders } from '@/components/SupabaseAuthProvider';
-import { initializeData } from "@/utils/api";
+import { initializeData } from "@/utils/localStorage";
 
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import NotFound from "./pages/NotFound";
+// Initialize local storage data immediately on script load
+initializeData();
 
 // Protected route component that redirects to login if not authenticated
 const ProtectedRoute = ({ 
@@ -54,9 +50,6 @@ const AppContent = () => {
   const { user, status } = useAuth();
   
   useEffect(() => {
-    // Initialize local storage data
-    initializeData();
-    
     // Log auth status changes for debugging
     console.log("App auth status changed:", status, user?.id);
   }, [user, status]);

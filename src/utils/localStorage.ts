@@ -48,19 +48,13 @@ export const clearAuthData = (): void => {
 export const initializeData = (): void => {
   console.log('Initializing local storage data');
   
-  // Initialize teachers if not present
-  const teachers = getLocalData<any[]>('teachers', []);
-  if (teachers.length === 0) {
-    console.log('Initializing teachers data');
-    saveLocalData('teachers', initialTeachers);
-  }
+  // Force initialize teachers - always ensure they exist
+  console.log('Initializing teachers data');
+  saveLocalData('teachers', initialTeachers);
   
-  // Initialize teacher passwords if not present
-  const storedTeacherPasswords = getLocalData('teacherPasswords', {});
-  if (Object.keys(storedTeacherPasswords).length === 0) {
-    console.log('Initializing teacher passwords');
-    saveLocalData('teacherPasswords', teacherPasswords);
-  }
+  // Force initialize teacher passwords - always ensure they exist
+  console.log('Initializing teacher passwords');
+  saveLocalData('teacherPasswords', teacherPasswords);
   
   // Initialize empty arrays for other data if not present
   if (!localStorage.getItem('projects')) {
@@ -74,4 +68,8 @@ export const initializeData = (): void => {
   if (!localStorage.getItem('students')) {
     saveLocalData('students', []);
   }
+  
+  // Log what's been initialized to verify
+  console.log('Teachers initialized:', getLocalData('teachers', []));
+  console.log('Teacher passwords initialized:', getLocalData('teacherPasswords', {}));
 };

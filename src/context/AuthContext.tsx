@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { getLocalData, saveLocalData, initialTeachers } from '@/utils/localStorage';
+import { getLocalData, saveLocalData, initialTeachers, teacherPasswords } from '@/utils/localStorage';
 
 interface AuthContextProps {
   user: User | null;
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   
   // Mock database for local development
   const [students, setStudents] = useState<Student[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [studentPasswords, setStudentPasswords] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -58,38 +58,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       setStatus('unauthenticated');
     }
 
-    // Load mock data from localStorage if available
-    const storedStudents = localStorage.getItem('students');
-    const storedTeachers = localStorage.getItem('teachers');
-    const storedStudentPasswords = localStorage.getItem('studentPasswords');
-    const storedTeacherPasswords = localStorage.getItem('teacherPasswords');
+    // Load mock data from localStorage - especially teachers
+    const storedTeachers = getLocalData<Teacher[]>('teachers', []);
+    console.log('Loaded teachers on mount:', storedTeachers);
+    setTeachers(storedTeachers);
+    
+    // Log the available teacher passwords
+    const storedTeacherPasswords = getLocalData<Record<string, string>>('teacherPasswords', {});
+    console.log('Available teacher usernames:', Object.keys(storedTeacherPasswords));
 
-    if (storedStudents) setStudents(JSON.parse(storedStudents));
-    if (storedTeachers) setTeachers(JSON.parse(storedTeachers));
-    if (storedStudentPasswords) setStudentPasswords(JSON.parse(storedStudentPasswords));
-    else localStorage.setItem('studentPasswords', JSON.stringify({}));
+    // Load other data
+    const storedStudents = getLocalData<Student[]>('students', []);
+    const storedStudentPasswords = getLocalData<Record<string, string>>('studentPasswords', {});
     
-    // Initialize teachers in localStorage if not present
-    if (!storedTeachers) {
-      console.log('Initializing teachers from AuthContext');
-      localStorage.setItem('teachers', JSON.stringify(initialTeachers));
-    }
-    
-    // Log the loaded data for debugging
-    console.log('Loaded teachers:', storedTeachers ? JSON.parse(storedTeachers) : initialTeachers);
-    console.log('Loaded teacher passwords:', storedTeacherPasswords ? 'Available' : 'Not available');
+    if (storedStudents.length > 0) setStudents(storedStudents);
+    if (Object.keys(storedStudentPasswords).length > 0) setStudentPasswords(storedStudentPasswords);
   }, []);
 
   // Save mock data to localStorage whenever it changes
   useEffect(() => {
     if (students.length > 0) {
-      localStorage.setItem('students', JSON.stringify(students));
+      saveLocalData('students', students);
     }
     if (teachers.length > 0) {
-      localStorage.setItem('teachers', JSON.stringify(teachers));
+      saveLocalData('teachers', teachers);
     }
     if (Object.keys(studentPasswords).length > 0) {
-      localStorage.setItem('studentPasswords', JSON.stringify(studentPasswords));
+      saveLocalData('studentPasswords', studentPasswords);
     }
   }, [students, teachers, studentPasswords]);
 
@@ -101,18 +96,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       // Use overrideLogin if provided (Supabase integration)
       if (overrideLogin) {
         console.log('Using override login');
-        await overrideLogin(username, password, isTeacher);
-        return;
+        const handled = await overrideLogin(username, password, isTeacher);
+        
+        // If the override handled the login (for students), return
+        if (handled === true) {
+          console.log("Login was handled by override");
+          return;
+        }
       }
       
       if (isTeacher) {
         console.log('Teacher login flow');
-        // Teacher login
-        const teacherPasswords = getLocalData<Record<string, string>>('teacherPasswords', {});
-        console.log('Available teacher usernames:', Object.keys(teacherPasswords));
+        // Get latest teacher passwords from localStorage
+        const currentTeacherPasswords = getLocalData<Record<string, string>>('teacherPasswords', teacherPasswords);
+        console.log('Available teacher usernames:', Object.keys(currentTeacherPasswords));
         
-        if (teacherPasswords[username] === password) {
-          const teacher = teachers.find(t => t.username === username);
+        if (currentTeacherPasswords[username] === password) {
+          // Get latest teachers from localStorage
+          const currentTeachers = getLocalData<Teacher[]>('teachers', initialTeachers);
+          const teacher = currentTeachers.find(t => t.username === username);
+          
           if (teacher) {
             console.log('Teacher found:', teacher);
             setUser(teacher);
@@ -124,7 +127,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
             });
             navigate('/dashboard/teacher');
             return;
+          } else {
+            console.error('Teacher account not found in stored teachers');
           }
+        } else {
+          console.error('Invalid teacher password');
         }
       } else {
         console.log('Student login flow');
