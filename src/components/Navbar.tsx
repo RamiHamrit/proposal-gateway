@@ -14,9 +14,9 @@ const Navbar = ({ title }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      logout();
+      await logout();
     } catch (error) {
       console.error("Logout error:", error);
     }
