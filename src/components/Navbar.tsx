@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LogOut, Settings, User } from "lucide-react";
 import UserSettingsDialog from "./UserSettingsDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavbarProps {
   title?: string;
@@ -14,23 +15,39 @@ const Navbar = ({ title }: NavbarProps) => {
   const { user, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
       console.log("Navbar: Logout button clicked");
+      
+      // Show logout toast immediately for better UX
+      toast({
+        title: "جاري تسجيل الخروج",
+        description: "جاري تسجيل خروجك من النظام...",
+      });
+      
       await logout();
       console.log("Navbar: Logout completed");
       
-      // The redirect will be handled in the logout function
+      // Force page reload after a short delay to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
     } catch (error) {
       console.error("Navbar: Logout error:", error);
+      
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تسجيل الخروج. جاري إعادة التحميل...",
+        variant: "destructive",
+      });
       
       // Force a page reload to clear all state if there was an error
       setTimeout(() => {
         window.location.href = '/';
-      }, 100);
+      }, 500);
     } finally {
       setIsLoggingOut(false);
     }

@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { createProject } from "@/utils/api";
+import { createProject } from "@/utils/projectApi";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface NewProjectFormProps {
   open: boolean;
@@ -52,31 +51,8 @@ const NewProjectForm = ({
     setIsSubmitting(true);
     
     try {
-      // Create project in local storage
-      createProject(title, description, user.id, user.name);
-      
-      // Also try to create project in Supabase if we have a connection
-      try {
-        const { data: projectData, error: projectError } = await supabase
-          .from('projects')
-          .insert({
-            title,
-            description,
-            teacher_id: user.id
-          })
-          .select()
-          .single();
-          
-        if (projectError) {
-          console.error("Error creating project in Supabase:", projectError);
-          // Continue with local storage project only
-        } else {
-          console.log("Project created in Supabase:", projectData);
-        }
-      } catch (dbError) {
-        console.error("Failed to create project in database:", dbError);
-        // Project is still created in local storage, so we continue
-      }
+      // Create project using the updated createProject function that handles both local storage and Supabase
+      await createProject(title, description, user.id, user.name);
       
       toast({
         title: "تم إنشاء المشروع",

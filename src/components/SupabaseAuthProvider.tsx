@@ -109,13 +109,13 @@ const useLegacyAuthAdapter = () => {
       });
       
       // Force a page reload to clear all state
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      window.location.href = '/';
       
       return true;
     } catch (error) {
       console.error("Logout error:", error);
+      // Force a page reload even if there was an error
+      window.location.href = '/';
       throw error;
     }
   };

@@ -22,15 +22,17 @@ export const getProjectsByTeacherId = (teacherId: string): Project[] => {
   return projects.filter(project => project.teacherId === teacherId);
 };
 
-export const createProject = (
+export const createProject = async (
   title: string, 
   description: string, 
   teacherId: string, 
   teacherName: string
-): Project => {
+): Promise<Project> => {
   const projects = getProjects();
+  const projectId = `project-${Date.now()}`;
+  
   const newProject: Project = {
-    id: `project-${Date.now()}`,
+    id: projectId,
     title,
     description,
     teacherId,
@@ -42,7 +44,27 @@ export const createProject = (
   console.log("Creating project in local storage:", newProject);
   saveLocalData('projects', [...projects, newProject]);
   
-  // Also try to create in Supabase (this is handled in NewProjectForm.tsx)
+  // Also create in Supabase
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        id: projectId, // Use the same ID for local and Supabase
+        title,
+        description,
+        teacher_id: teacherId
+      });
+      
+    if (error) {
+      console.error("Error creating project in Supabase:", error);
+      // We continue with local storage project even if Supabase fails
+    } else {
+      console.log("Project created in Supabase:", data);
+    }
+  } catch (dbError) {
+    console.error("Failed to create project in database:", dbError);
+    // Project is still created in local storage, so we continue
+  }
   
   return newProject;
 };
