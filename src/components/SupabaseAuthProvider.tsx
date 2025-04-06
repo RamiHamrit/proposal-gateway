@@ -56,6 +56,13 @@ const useLegacyAuthAdapter = () => {
           throw error;
         }
         console.log("Supabase login successful");
+        
+        // Force page navigation after successful login
+        setTimeout(() => {
+          console.log("Redirecting after successful student login");
+          window.location.href = '/dashboard/student';
+        }, 500);
+        
         return true;
       }
     } catch (error) {
@@ -78,6 +85,12 @@ const useLegacyAuthAdapter = () => {
         }
       });
       if (error) throw error;
+      
+      // Force page navigation after successful signup
+      setTimeout(() => {
+        window.location.href = '/dashboard/student';
+      }, 500);
+      
       return true;
     } catch (error) {
       console.error("Signup error in legacy adapter:", error);

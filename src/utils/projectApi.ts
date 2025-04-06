@@ -59,13 +59,15 @@ export const createProject = async (
         id: projectId, // Use the same ID for local and Supabase
         title,
         description,
-        teacher_id: teacherId
+        teacher_id: teacherId,
+        teacher_name: teacherName, // Add teacher name for consistency
+        created_at: newProject.createdAt // Use the same timestamp
       }])
       .select();
       
     if (error) {
       console.error("Error creating project in Supabase:", error);
-      // We continue with local storage project even if Supabase fails
+      // Continue with local storage project even if Supabase fails
     } else {
       console.log("Project created in Supabase:", data);
     }

@@ -229,7 +229,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         description: "تم تسجيل دخولك تلقائياً",
       });
       
-      navigate('/dashboard/student');
+      // Use window.location for navigation to avoid router context issues
+      window.location.href = '/dashboard/student';
     } catch (error) {
       setStatus('unauthenticated');
       toast({
@@ -270,16 +271,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         description: "تم تسجيل خروجك بنجاح",
       });
       
-      // Force navigation to home page
+      // Force navigation to home page using window.location
       console.log("AuthContext: Navigating to / after logout");
-      navigate('/', { replace: true });
+      window.location.href = '/';
     } catch (error) {
       console.error("Logout error in AuthContext:", error);
       // Even on error, we should clear the local session
       setUser(null);
       setStatus('unauthenticated');
       localStorage.removeItem('user');
-      navigate('/');
+      window.location.href = '/';
       toast({
         title: "تم تسجيل الخروج",
         description: "تم تسجيل خروجك مع وجود خطأ",

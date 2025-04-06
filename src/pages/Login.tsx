@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("student");
   const { toast } = useToast();
   
@@ -45,9 +44,9 @@ const Login = () => {
     if (status === 'authenticated' && user) {
       console.log("User already authenticated, redirecting to dashboard");
       const dashboardRoute = user.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student';
-      navigate(dashboardRoute, { replace: true });
+      window.location.href = dashboardRoute;
     }
-  }, [status, user, navigate]);
+  }, [status, user]);
   
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,14 +65,19 @@ const Login = () => {
       console.log("Attempting student login with:", studentEmail);
       await login(studentEmail, studentPassword, false);
       
-      // We don't navigate here - App.tsx will handle it based on auth state
-      console.log("Login successful, waiting for auth state to update");
-      
       // Display a toast for better UX while waiting for state to update
       toast({
         title: "تم تسجيل الدخول",
         description: "جارِ الانتقال إلى لوحة التحكم...",
       });
+      
+      // Force redirect after a short delay if the auth state doesn't change automatically
+      setTimeout(() => {
+        if (status !== 'authenticated') {
+          console.log("Login completed but redirect didn't happen automatically, forcing redirect");
+          window.location.href = '/dashboard/student';
+        }
+      }, 1000);
     } catch (error) {
       console.error("Student login error:", error);
       toast({
@@ -109,7 +113,13 @@ const Login = () => {
         description: "مرحباً بعودتك!",
       });
       
-      // We don't navigate here - the auth state change will trigger a redirect
+      // Force redirect after a short delay if the auth state doesn't change automatically
+      setTimeout(() => {
+        if (status !== 'authenticated') {
+          console.log("Teacher login completed but redirect didn't happen automatically, forcing redirect");
+          window.location.href = '/dashboard/teacher';
+        }
+      }, 1000);
     } catch (error) {
       console.error("Teacher login error:", error);
       toast({
