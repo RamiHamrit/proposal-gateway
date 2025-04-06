@@ -51,7 +51,11 @@ const useLegacyAuthAdapter = () => {
           email: username, 
           password 
         });
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase login error:", error.message);
+          throw error;
+        }
+        console.log("Supabase login successful");
         return true;
       }
     } catch (error) {

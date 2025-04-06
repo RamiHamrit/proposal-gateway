@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 import { getLocalData, saveLocalData, initialTeachers, teacherPasswords } from '@/utils/localStorage';
 
 interface AuthContextProps {
@@ -41,7 +40,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('idle');
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   // Mock database for local development
   const [students, setStudents] = useState<Student[]>([]);
@@ -54,8 +52,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     if (storedUser) {
       setUser(JSON.parse(storedUser));
       setStatus('authenticated');
+      console.log("Restored auth from localStorage: authenticated");
     } else {
       setStatus('unauthenticated');
+      console.log("No auth found in localStorage: unauthenticated");
     }
 
     // Load mock data from localStorage - especially teachers
@@ -96,12 +96,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       // Use overrideLogin if provided (Supabase integration)
       if (overrideLogin) {
         console.log('Using override login');
-        const handled = await overrideLogin(username, password, isTeacher);
-        
-        // If the override handled the login (for students), return
-        if (handled === true) {
-          console.log("Login was handled by override");
-          return;
+        try {
+          const handled = await overrideLogin(username, password, isTeacher);
+          
+          // If the override handled the login (for students), return
+          if (handled === true) {
+            console.log("Login was handled by override");
+            return;
+          }
+        } catch (error) {
+          console.error("Override login failed:", error);
+          // Fall back to local login if override fails and it's a teacher login
+          if (!isTeacher) {
+            throw error; // For student login, let the error propagate
+          }
+          // For teacher login, continue with local flow
         }
       }
       
@@ -125,7 +134,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
               title: "تم تسجيل الدخول بنجاح",
               description: `مرحباً، ${teacher.name}`,
             });
-            navigate('/dashboard/teacher');
+            
+            // Use window.location for navigation to avoid router context issues
+            window.location.href = '/dashboard/teacher';
             return;
           } else {
             console.error('Teacher account not found in stored teachers');
@@ -147,7 +158,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
               title: "تم تسجيل الدخول بنجاح",
               description: `مرحباً، ${student.name}`,
             });
-            navigate('/dashboard/student');
+            
+            // Use window.location for navigation to avoid router context issues
+            window.location.href = '/dashboard/student';
             return;
           }
         }

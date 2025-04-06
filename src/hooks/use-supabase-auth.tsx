@@ -1,9 +1,7 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 // Define the user type with role information
 export interface SupabaseUser extends User {
@@ -33,7 +31,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isLoading: true,
   });
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Function to get user's role from Supabase
   const getUserRole = async (userId: string) => {
@@ -82,15 +79,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           console.log("User authenticated as:", profileData?.role);
           
-          // Navigate based on role
-          if (profileData?.role === 'teacher') {
+          // Navigate based on role - using window.location to avoid router context issues
+          if (event === 'SIGNED_IN') {
+            const dashboardPath = profileData?.role === 'teacher' 
+              ? '/dashboard/teacher' 
+              : '/dashboard/student';
+              
+            console.log(`Auth state changed to SIGNED_IN. Redirecting to ${dashboardPath}`);
+            
+            // Use setTimeout to avoid router context issues
             setTimeout(() => {
-              navigate('/dashboard/teacher', { replace: true });
-            }, 0);
-          } else {
-            setTimeout(() => {
-              navigate('/dashboard/student', { replace: true });
-            }, 0);
+              window.location.href = dashboardPath;
+            }, 100);
           }
         } else {
           console.log("Supabase auth: No active session detected in state change");
@@ -105,8 +105,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (event === 'SIGNED_OUT') {
             console.log("User signed out, navigating to home");
             setTimeout(() => {
-              navigate('/', { replace: true });
-            }, 0);
+              window.location.href = '/';
+            }, 100);
           }
         }
       }
@@ -133,19 +133,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             user: extendedUser,
             isLoading: false,
           });
-        }
-        
-        console.log("User authenticated as:", profileData?.role);
-        
-        // Navigate based on role using setTimeout to avoid Router context issues
-        if (profileData?.role === 'teacher') {
-          setTimeout(() => {
-            navigate('/dashboard/teacher', { replace: true });
-          }, 0);
-        } else {
-          setTimeout(() => {
-            navigate('/dashboard/student', { replace: true });
-          }, 0);
+          
+          console.log("User authenticated as:", profileData?.role);
         }
       } else {
         console.log("Supabase auth: No active session found on initial check");
@@ -164,7 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
       isMounted = false;
     };
-  }, [navigate]);
+  }, []);
 
   const signUp = async (
     name: string, 
@@ -262,8 +251,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Force navigation to home page using setTimeout to avoid Router context issues
       setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 0);
+        window.location.href = '/';
+      }, 100);
     } catch (error: any) {
       console.error("useSupabaseAuth signOut catch error:", error);
       
@@ -275,8 +264,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Even on error, try to redirect using setTimeout
       setTimeout(() => {
-        navigate('/', { replace: true });
-      }, 0);
+        window.location.href = '/';
+      }, 100);
       
       throw error;
     }

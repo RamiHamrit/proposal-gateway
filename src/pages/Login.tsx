@@ -35,12 +35,19 @@ const Login = () => {
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherLoading, setTeacherLoading] = useState(false);
   
-  const { login, status } = useAuth();
+  const { login, status, user } = useAuth();
   
-  // Log current auth status for debugging
+  // Log current auth status for debugging and redirect if already logged in
   useEffect(() => {
-    console.log("Current auth status:", status);
-  }, [status]);
+    console.log("Current auth status:", status, "User:", user?.id);
+    
+    // If user is authenticated, redirect to appropriate dashboard
+    if (status === 'authenticated' && user) {
+      console.log("User already authenticated, redirecting to dashboard");
+      const dashboardRoute = user.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student';
+      navigate(dashboardRoute, { replace: true });
+    }
+  }, [status, user, navigate]);
   
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +65,15 @@ const Login = () => {
     try {
       console.log("Attempting student login with:", studentEmail);
       await login(studentEmail, studentPassword, false);
-      // Navigation is handled by AuthContext/App.tsx based on auth state
+      
+      // We don't navigate here - App.tsx will handle it based on auth state
+      console.log("Login successful, waiting for auth state to update");
+      
+      // Display a toast for better UX while waiting for state to update
+      toast({
+        title: "تم تسجيل الدخول",
+        description: "جارِ الانتقال إلى لوحة التحكم...",
+      });
     } catch (error) {
       console.error("Student login error:", error);
       toast({
@@ -87,7 +102,14 @@ const Login = () => {
     try {
       console.log("Attempting teacher login with username:", teacherUsername);
       await login(teacherUsername, teacherPassword, true);
-      // Navigate is handled by AuthContext
+      
+      // For teachers, we display a success toast
+      toast({
+        title: "تم تسجيل الدخول",
+        description: "مرحباً بعودتك!",
+      });
+      
+      // We don't navigate here - the auth state change will trigger a redirect
     } catch (error) {
       console.error("Teacher login error:", error);
       toast({

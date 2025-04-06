@@ -46,14 +46,22 @@ export const createProject = async (
   
   // Also create in Supabase
   try {
+    console.log("Attempting to create project in Supabase:", {
+      id: projectId,
+      title,
+      description,
+      teacher_id: teacherId
+    });
+    
     const { data, error } = await supabase
       .from('projects')
-      .insert({
+      .insert([{
         id: projectId, // Use the same ID for local and Supabase
         title,
         description,
         teacher_id: teacherId
-      });
+      }])
+      .select();
       
     if (error) {
       console.error("Error creating project in Supabase:", error);
@@ -93,6 +101,8 @@ export const deleteProject = async (id: string): Promise<void> => {
   
   // Try to delete from Supabase if connected
   try {
+    console.log("Attempting to delete project from Supabase:", id);
+    
     const { error } = await supabase
       .from('projects')
       .delete()
