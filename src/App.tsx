@@ -9,6 +9,14 @@ import { useAuth } from "@/context/AuthContext";
 import { AuthProviders } from '@/components/SupabaseAuthProvider';
 import { initializeData } from "@/utils/localStorage";
 
+// Import all page components
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import SignUp from "@/pages/SignUp";
+import StudentDashboard from "@/pages/StudentDashboard";
+import TeacherDashboard from "@/pages/TeacherDashboard";
+import NotFound from "@/pages/NotFound";
+
 // Initialize local storage data immediately on script load
 initializeData();
 
@@ -58,55 +66,55 @@ const AppContent = () => {
   const key = `auth-${status}-${user?.id || "none"}`;
   
   return (
-    <BrowserRouter key={key}>
-      <Routes>
-        <Route 
-          path="/" 
-          element={
-            user ? (
-              <Navigate 
-                to={user.role === 'student' ? '/dashboard/student' : '/dashboard/teacher'} 
-                replace 
-              />
-            ) : (
-              <Index />
-            )
-          } 
-        />
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
-        <Route
-          path="/dashboard/student"
-          element={
-            <ProtectedRoute 
-              element={<StudentDashboard />} 
-              allowedRole="student" 
+    <Routes>
+      <Route 
+        path="/" 
+        element={
+          user ? (
+            <Navigate 
+              to={user.role === 'student' ? '/dashboard/student' : '/dashboard/teacher'} 
+              replace 
             />
-          }
-        />
-        <Route
-          path="/dashboard/teacher"
-          element={
-            <ProtectedRoute 
-              element={<TeacherDashboard />} 
-              allowedRole="teacher" 
-            />
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+          ) : (
+            <Index />
+          )
+        } 
+      />
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
+      <Route
+        path="/dashboard/student"
+        element={
+          <ProtectedRoute 
+            element={<StudentDashboard />} 
+            allowedRole="student" 
+          />
+        }
+      />
+      <Route
+        path="/dashboard/teacher"
+        element={
+          <ProtectedRoute 
+            element={<TeacherDashboard />} 
+            allowedRole="teacher" 
+          />
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProviders>
-        <AppContent />
-        <Toaster />
-        <Sonner />
-      </AuthProviders>
+      <BrowserRouter>
+        <AuthProviders>
+          <AppContent />
+          <Toaster />
+          <Sonner />
+        </AuthProviders>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

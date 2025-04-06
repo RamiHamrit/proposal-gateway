@@ -4,7 +4,6 @@ import { AuthProvider as SupabaseAuthProvider } from '@/hooks/use-supabase-auth'
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 import { clearAuthData, teacherPasswords, getLocalData } from '@/utils/localStorage';
 
 interface AuthProvidersProps {
@@ -15,7 +14,6 @@ interface AuthProvidersProps {
 const useLegacyAuthAdapter = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
   
   useEffect(() => {
     // Initialize the legacy auth adapter
@@ -107,15 +105,13 @@ const useLegacyAuthAdapter = () => {
       // Clear any cached user data in localStorage
       clearAuthData();
       
-      // Force navigation to home page
-      console.log("Legacy adapter: Navigating to / after logout");
-      navigate('/', { replace: true });
+      // We no longer need navigate here as it was causing the error
+      // Navigation is now handled in use-supabase-auth.tsx and App.tsx
       
       return true;
     } catch (error) {
       console.error("Logout error:", error);
-      // Even on error, navigate to home
-      navigate('/', { replace: true });
+      // No longer navigating here
       throw error;
     }
   };

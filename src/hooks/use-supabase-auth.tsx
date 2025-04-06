@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     console.log("Setting up Supabase auth state listener");
+    let isMounted = true;
     
     // Set up auth state listener first to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -71,31 +72,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             name: profileData?.name || ''
           };
           
-          setState({
-            session,
-            user: extendedUser,
-            isLoading: false,
-          });
+          if (isMounted) {
+            setState({
+              session,
+              user: extendedUser,
+              isLoading: false,
+            });
+          }
           
           console.log("User authenticated as:", profileData?.role);
           
           // Navigate based on role
           if (profileData?.role === 'teacher') {
-            navigate('/dashboard/teacher', { replace: true });
+            setTimeout(() => {
+              navigate('/dashboard/teacher', { replace: true });
+            }, 0);
           } else {
-            navigate('/dashboard/student', { replace: true });
+            setTimeout(() => {
+              navigate('/dashboard/student', { replace: true });
+            }, 0);
           }
         } else {
           console.log("Supabase auth: No active session detected in state change");
-          setState({
-            session: null,
-            user: null,
-            isLoading: false,
-          });
+          if (isMounted) {
+            setState({
+              session: null,
+              user: null,
+              isLoading: false,
+            });
+          }
           
           if (event === 'SIGNED_OUT') {
             console.log("User signed out, navigating to home");
-            navigate('/', { replace: true });
+            setTimeout(() => {
+              navigate('/', { replace: true });
+            }, 0);
           }
         }
       }
@@ -116,33 +127,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           name: profileData?.name || ''
         };
         
-        setState({
-          session,
-          user: extendedUser,
-          isLoading: false,
-        });
+        if (isMounted) {
+          setState({
+            session,
+            user: extendedUser,
+            isLoading: false,
+          });
+        }
         
         console.log("User authenticated as:", profileData?.role);
         
-        // Navigate based on role
+        // Navigate based on role using setTimeout to avoid Router context issues
         if (profileData?.role === 'teacher') {
-          navigate('/dashboard/teacher', { replace: true });
+          setTimeout(() => {
+            navigate('/dashboard/teacher', { replace: true });
+          }, 0);
         } else {
-          navigate('/dashboard/student', { replace: true });
+          setTimeout(() => {
+            navigate('/dashboard/student', { replace: true });
+          }, 0);
         }
       } else {
         console.log("Supabase auth: No active session found on initial check");
-        setState(prevState => ({
-          ...prevState,
-          session: null,
-          user: null,
-          isLoading: false,
-        }));
+        if (isMounted) {
+          setState(prevState => ({
+            ...prevState,
+            session: null,
+            user: null,
+            isLoading: false,
+          }));
+        }
       }
     });
 
     return () => {
       subscription.unsubscribe();
+      isMounted = false;
     };
   }, [navigate]);
 
@@ -240,8 +260,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "تم تسجيل خروجك بنجاح",
       });
       
-      // Force navigation to home page
-      navigate('/', { replace: true });
+      // Force navigation to home page using setTimeout to avoid Router context issues
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 0);
     } catch (error: any) {
       console.error("useSupabaseAuth signOut catch error:", error);
       
@@ -251,8 +273,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: "destructive",
       });
       
-      // Even on error, try to redirect
-      navigate('/', { replace: true });
+      // Even on error, try to redirect using setTimeout
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 0);
       
       throw error;
     }
