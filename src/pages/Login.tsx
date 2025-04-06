@@ -63,26 +63,28 @@ const Login = () => {
     setStudentLoading(true);
     try {
       console.log("Attempting student login with:", studentEmail);
+      toast({
+        title: "جاري تسجيل الدخول...",
+        description: "يرجى الانتظار قليلاً",
+      });
+      
       await login(studentEmail, studentPassword, false);
       
-      // Display a toast for better UX while waiting for state to update
+      // Display a success toast
       toast({
         title: "تم تسجيل الدخول",
         description: "جارِ الانتقال إلى لوحة التحكم...",
       });
       
-      // Force redirect after a short delay if the auth state doesn't change automatically
-      setTimeout(() => {
-        if (status !== 'authenticated') {
-          console.log("Login completed but redirect didn't happen automatically, forcing redirect");
-          window.location.href = '/dashboard/student';
-        }
-      }, 1000);
-    } catch (error) {
+      // Force redirect immediately, don't wait for auth state
+      console.log("Login completed, forcing redirect to student dashboard");
+      window.location.href = '/dashboard/student';
+      
+    } catch (error: any) {
       console.error("Student login error:", error);
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "تحقق من بريدك الإلكتروني وكلمة المرور",
+        description: error.message || "تحقق من بريدك الإلكتروني وكلمة المرور",
         variant: "destructive",
       });
     } finally {
@@ -105,6 +107,11 @@ const Login = () => {
     setTeacherLoading(true);
     try {
       console.log("Attempting teacher login with username:", teacherUsername);
+      toast({
+        title: "جاري تسجيل الدخول...",
+        description: "يرجى الانتظار قليلاً",
+      });
+      
       await login(teacherUsername, teacherPassword, true);
       
       // For teachers, we display a success toast
@@ -113,18 +120,15 @@ const Login = () => {
         description: "مرحباً بعودتك!",
       });
       
-      // Force redirect after a short delay if the auth state doesn't change automatically
-      setTimeout(() => {
-        if (status !== 'authenticated') {
-          console.log("Teacher login completed but redirect didn't happen automatically, forcing redirect");
-          window.location.href = '/dashboard/teacher';
-        }
-      }, 1000);
-    } catch (error) {
+      // Force redirect immediately, don't wait for auth state
+      console.log("Teacher login completed, forcing redirect");
+      window.location.href = '/dashboard/teacher';
+      
+    } catch (error: any) {
       console.error("Teacher login error:", error);
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "تحقق من اسم المستخدم وكلمة المرور",
+        description: error.message || "تحقق من اسم المستخدم وكلمة المرور",
         variant: "destructive",
       });
     } finally {

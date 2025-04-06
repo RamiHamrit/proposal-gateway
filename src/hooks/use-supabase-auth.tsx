@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,17 +36,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Function to get user's role from Supabase
   const getUserRole = async (userId: string) => {
     try {
+      console.log("Fetching user role from profiles table for:", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('role, name')
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching user role:", error);
+        throw error;
+      }
+      console.log("Fetched user role:", data);
       return data;
     } catch (error) {
-      console.error('Error fetching user role:', error);
-      return null;
+      console.error("Error in getUserRole:", error);
+      // Return default role if error
+      return { role: 'student', name: '' };
     }
   };
 
@@ -59,14 +66,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Supabase auth state change:", event, session?.user?.id);
         
         if (session?.user) {
-          // Get role information when auth state changes
-          const profileData = await getUserRole(session.user.id);
+          console.log("User authenticated:", session.user.id);
           
-          // Extend user with role information
+          // Extend user with metadata information immediately
+          const metadataRole = session.user.user_metadata?.role;
+          const metadataName = session.user.user_metadata?.name;
+          
           const extendedUser: SupabaseUser = {
             ...session.user,
-            role: profileData?.role as 'student' | 'teacher' || 'student',
-            name: profileData?.name || ''
+            role: metadataRole || 'student',
+            name: metadataName || ''
           };
           
           if (isMounted) {
@@ -77,21 +86,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             });
           }
           
-          console.log("User authenticated as:", profileData?.role);
+          console.log("User authenticated as:", metadataRole || 'student');
           
-          // Navigate based on role - using window.location to avoid router context issues
-          if (event === 'SIGNED_IN') {
-            const dashboardPath = profileData?.role === 'teacher' 
-              ? '/dashboard/teacher' 
-              : '/dashboard/student';
+          // Try to get additional profile info in the background (don't wait for it)
+          setTimeout(async () => {
+            try {
+              const profileData = await getUserRole(session.user.id);
               
-            console.log(`Auth state changed to SIGNED_IN. Redirecting to ${dashboardPath}`);
-            
-            // Use setTimeout to avoid router context issues
-            setTimeout(() => {
-              window.location.href = dashboardPath;
-            }, 100);
-          }
+              if (profileData && isMounted) {
+                const updatedUser: SupabaseUser = {
+                  ...session.user,
+                  role: profileData.role as 'student' | 'teacher' || metadataRole || 'student',
+                  name: profileData.name || metadataName || ''
+                };
+                
+                setState(prev => ({
+                  ...prev,
+                  user: updatedUser
+                }));
+              }
+            } catch (error) {
+              console.error("Error fetching additional profile data:", error);
+              // Just continue with metadata-based user
+            }
+          }, 0);
+          
+          // Navigation will be handled by components, not here
         } else {
           console.log("Supabase auth: No active session detected in state change");
           if (isMounted) {
@@ -100,13 +120,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               user: null,
               isLoading: false,
             });
-          }
-          
-          if (event === 'SIGNED_OUT') {
-            console.log("User signed out, navigating to home");
-            setTimeout(() => {
-              window.location.href = '/';
-            }, 100);
           }
         }
       }
@@ -117,25 +130,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Supabase initial session check:", session?.user?.id);
       
       if (session?.user) {
-        // Get role information
-        const profileData = await getUserRole(session.user.id);
+        // Get initial metadata info
+        const metadataRole = session.user.user_metadata?.role;
+        const metadataName = session.user.user_metadata?.name;
         
-        // Extend user with role information
-        const extendedUser: SupabaseUser = {
+        // Extend user with basic metadata information immediately
+        const initialUser: SupabaseUser = {
           ...session.user,
-          role: profileData?.role as 'student' | 'teacher' || 'student',
-          name: profileData?.name || ''
+          role: metadataRole || 'student',
+          name: metadataName || ''
         };
         
         if (isMounted) {
           setState({
             session,
-            user: extendedUser,
+            user: initialUser,
             isLoading: false,
           });
           
-          console.log("User authenticated as:", profileData?.role);
+          console.log("User authenticated initially as:", metadataRole || 'student');
         }
+        
+        // Try to get additional profile info (don't block on this)
+        setTimeout(async () => {
+          try {
+            const profileData = await getUserRole(session.user.id);
+            
+            if (profileData && isMounted) {
+              const updatedUser: SupabaseUser = {
+                ...session.user,
+                role: profileData.role as 'student' | 'teacher' || metadataRole || 'student',
+                name: profileData.name || metadataName || ''
+              };
+              
+              setState(prev => ({
+                ...prev,
+                user: updatedUser
+              }));
+            }
+          } catch (error) {
+            console.error("Error fetching additional profile data on init:", error);
+            // Just continue with metadata-based user
+          }
+        }, 0);
       } else {
         console.log("Supabase auth: No active session found on initial check");
         if (isMounted) {
@@ -162,9 +199,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     role: 'student' | 'teacher' = 'student'
   ) => {
     try {
-      console.log("Attempting signup:", name, email, role);
+      console.log("Attempting signup with Supabase:", name, email, role);
       
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -177,10 +214,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
       
+      console.log("Signup successful, user:", data.user?.id);
+      
       toast({
         title: "تم إنشاء الحساب بنجاح",
-        description: "يرجى التحقق من بريدك الإلكتروني لتأكيد الحساب",
+        description: "جاري الانتقال إلى لوحة التحكم...",
       });
+      
+      // Navigation will be handled by the calling component
     } catch (error: any) {
       console.error("Signup error:", error);
       
@@ -195,19 +236,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("Attempting signin:", email);
+      console.log("Attempting signin with Supabase:", email);
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
       
+      console.log("Signin successful, session:", data.session?.user.id);
+      
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: "مرحباً بعودتك!",
       });
+      
+      // Navigation will be handled by the calling component
     } catch (error: any) {
       console.error("Signin error:", error);
       
@@ -249,10 +294,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "تم تسجيل خروجك بنجاح",
       });
       
-      // Force navigation to home page using setTimeout to avoid Router context issues
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Force navigation to home page
+      window.location.href = '/';
     } catch (error: any) {
       console.error("useSupabaseAuth signOut catch error:", error);
       
@@ -262,10 +305,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: "destructive",
       });
       
-      // Even on error, try to redirect using setTimeout
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Even on error, try to redirect
+      window.location.href = '/';
       
       throw error;
     }

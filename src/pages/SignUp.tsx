@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -17,6 +18,7 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   
   const { signup } = useAuth();
+  const { toast } = useToast();
   
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +42,33 @@ const SignUp = () => {
     
     setLoading(true);
     try {
+      console.log("Starting signup process for student:", email);
+      toast({
+        title: "جاري إنشاء الحساب...",
+        description: "يرجى الانتظار قليلاً",
+      });
+      
       await signup(name, email, password);
-      // Redirect handled by AuthContext via React Router
-    } catch (error) {
-      setError("حدث خطأ أثناء إنشاء الحساب");
+      
+      // Show success message
+      toast({
+        title: "تم إنشاء الحساب بنجاح",
+        description: "جاري الانتقال إلى لوحة التحكم...",
+      });
+      
+      // Force redirect to student dashboard after signup
+      console.log("Redirecting to student dashboard after successful signup");
+      setTimeout(() => {
+        window.location.href = '/dashboard/student';
+      }, 500);
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      setError(error.message || "حدث خطأ أثناء إنشاء الحساب");
+      toast({
+        title: "فشل إنشاء الحساب",
+        description: error.message || "حدث خطأ أثناء إنشاء الحساب",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -47,22 +47,19 @@ const useLegacyAuthAdapter = () => {
       } else {
         // Student login with Supabase
         console.log("Student login with Supabase:", username);
-        const { error } = await supabase.auth.signInWithPassword({ 
+        const { error, data } = await supabase.auth.signInWithPassword({ 
           email: username, 
           password 
         });
+        
         if (error) {
           console.error("Supabase login error:", error.message);
           throw error;
         }
-        console.log("Supabase login successful");
         
-        // Force page navigation after successful login
-        setTimeout(() => {
-          console.log("Redirecting after successful student login");
-          window.location.href = '/dashboard/student';
-        }, 500);
+        console.log("Supabase login successful, session:", data.session?.user.id);
         
+        // No need to force navigation as it will be done by the component
         return true;
       }
     } catch (error) {
@@ -74,7 +71,7 @@ const useLegacyAuthAdapter = () => {
   const signup = async (name: string, email: string, password: string) => {
     try {
       console.log("Legacy adapter signup:", name, email);
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -84,13 +81,15 @@ const useLegacyAuthAdapter = () => {
           }
         }
       });
-      if (error) throw error;
       
-      // Force page navigation after successful signup
-      setTimeout(() => {
-        window.location.href = '/dashboard/student';
-      }, 500);
+      if (error) {
+        console.error("Supabase signup error:", error);
+        throw error;
+      }
       
+      console.log("Signup successful, user:", data.user?.id);
+      
+      // No need to force navigation as it will be done by the component
       return true;
     } catch (error) {
       console.error("Signup error in legacy adapter:", error);
