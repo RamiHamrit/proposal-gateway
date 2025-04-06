@@ -236,8 +236,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         console.log("AuthContext: Using override logout");
         try {
           await overrideLogout();
+          // If we got here, logout was successful, no need to continue with local logic
+          return;
         } catch (error) {
           console.error("Override logout error:", error);
+          // Continue with local logout as fallback
         }
       }
       
@@ -249,17 +252,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       
       console.log("AuthContext: Local state cleared, status:", 'unauthenticated');
       
-      if (!overrideLogout) {
-        console.log("AuthContext: Using default logout");
-        toast({
-          title: "تم تسجيل الخروج",
-          description: "تم تسجيل خروجك بنجاح",
-        });
-      }
+      toast({
+        title: "تم تسجيل الخروج",
+        description: "تم تسجيل خروجك بنجاح",
+      });
       
       // Force navigation to home page
       console.log("AuthContext: Navigating to / after logout");
-      navigate('/');
+      navigate('/', { replace: true });
     } catch (error) {
       console.error("Logout error in AuthContext:", error);
       // Even on error, we should clear the local session

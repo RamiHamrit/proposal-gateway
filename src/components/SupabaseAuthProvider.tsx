@@ -84,6 +84,12 @@ const useLegacyAuthAdapter = () => {
   const logout = async () => {
     try {
       console.log("Legacy adapter: Attempting to sign out");
+      
+      // First clear any local auth data
+      clearAuthData();
+      console.log("Legacy adapter: Local auth data cleared");
+      
+      // Then sign out from Supabase if there's an active session
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -102,16 +108,14 @@ const useLegacyAuthAdapter = () => {
         description: "تم تسجيل خروجك بنجاح",
       });
       
-      // Clear any cached user data in localStorage
-      clearAuthData();
-      
-      // We no longer need navigate here as it was causing the error
-      // Navigation is now handled in use-supabase-auth.tsx and App.tsx
+      // Force a page reload to clear all state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
       
       return true;
     } catch (error) {
       console.error("Logout error:", error);
-      // No longer navigating here
       throw error;
     }
   };

@@ -21,12 +21,16 @@ const Navbar = ({ title }: NavbarProps) => {
       setIsLoggingOut(true);
       console.log("Navbar: Logout button clicked");
       await logout();
-      console.log("Navbar: Logout completed, redirecting to home");
+      console.log("Navbar: Logout completed");
       
-      // Force navigation to home page after successful logout
-      navigate('/', { replace: true });
+      // The redirect will be handled in the logout function
     } catch (error) {
       console.error("Navbar: Logout error:", error);
+      
+      // Force a page reload to clear all state if there was an error
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } finally {
       setIsLoggingOut(false);
     }
