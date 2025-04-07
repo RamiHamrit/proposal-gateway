@@ -1,4 +1,3 @@
-
 import { Project } from '@/types';
 import { getLocalData, saveLocalData } from './localStorage';
 import { getProposals } from './proposalApi';
@@ -8,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  * API functions for managing projects
  */
 
-export const getProjects = async (): Promise<Project[]> {
+export const getProjects = async () => {
   try {
     console.log("Fetching projects from Supabase");
     const { data, error } = await supabase
