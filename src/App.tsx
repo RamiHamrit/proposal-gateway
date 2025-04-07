@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { AuthProviders } from '@/components/SupabaseAuthProvider';
 import { initializeData } from "@/utils/localStorage";
 
 // Import all page components
@@ -109,11 +108,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
-        <AuthProviders>
-          <AppContent />
-          <Toaster />
-          <Sonner />
-        </AuthProviders>
+        <AppContent />
+        <Toaster />
+        <Sonner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

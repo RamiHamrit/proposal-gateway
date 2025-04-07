@@ -1,7 +1,6 @@
 
 import { Proposal, Student } from '@/types';
 import { getLocalData, saveLocalData } from './localStorage';
-import { getProjects } from './projectApi';
 
 /**
  * API functions for managing proposals
@@ -100,7 +99,7 @@ export const createProposal = (
   saveLocalData('students', updatedStudents);
   
   // Update project's proposals list
-  const projects = getProjects();
+  const projects = getLocalData<{ id: string, proposals: Proposal[] }[]>('projects', []);
   const updatedProjects = projects.map(project => {
     if (project.id === projectId) {
       return {
@@ -172,7 +171,7 @@ export const updateProposalStatus = (
   saveLocalData('students', updatedStudents);
   
   // Update the project's proposal list
-  const projects = getProjects();
+  const projects = getLocalData<{ id: string, proposals: Proposal[] }[]>('projects', []);
   const updatedProjects = projects.map(project => {
     if (project.id === updatedProposal.projectId) {
       return {
@@ -226,7 +225,7 @@ export const deleteProposal = (id: string): void => {
   saveLocalData('students', updatedStudents);
   
   // Update project's proposals list
-  const projects = getProjects();
+  const projects = getLocalData<{ id: string, proposals: Proposal[] }[]>('projects', []);
   const updatedProjects = projects.map(project => {
     if (project.id === proposalToDelete.projectId) {
       return {
