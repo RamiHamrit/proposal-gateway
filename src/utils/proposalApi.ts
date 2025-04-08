@@ -27,7 +27,7 @@ export const getActiveProposalsByStudentId = (studentId: string): Proposal[] => 
   return proposals.filter(proposal => proposal.status !== 'rejected');
 };
 
-// New helper function to check if a student has a selected proposal
+// Helper function to check if a student has a selected proposal
 export const hasSelectedProposal = (studentId: string): boolean => {
   const proposals = getProposalsByStudentId(studentId);
   return proposals.some(proposal => proposal.status === 'selected');

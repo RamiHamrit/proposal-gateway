@@ -7,7 +7,7 @@ import { Clock, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { arSA } from "date-fns/locale";
 import { useAuth } from "@/context/AuthContext";
-import { updateProposalStatus, deleteProposal, getProposalsByProjectId } from "@/utils/api";
+import { updateProposalStatus, deleteProposal, getProposalsByProjectId, hasSelectedProposal } from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProposalCardProps {
@@ -44,6 +44,16 @@ const ProposalCard = ({
       toast({
         title: "لا يمكن الموافقة",
         description: "تم بالفعل الموافقة على مقترح آخر لهذا المشروع",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check if student already has a selected project
+    if (hasSelectedProposal(proposal.studentId)) {
+      toast({
+        title: "لا يمكن الموافقة",
+        description: "لقد اختار هذا الطالب مشروعًا نهائيًا بالفعل",
         variant: "destructive"
       });
       return;
