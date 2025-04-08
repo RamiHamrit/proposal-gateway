@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Project, Proposal } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -17,13 +16,15 @@ interface ProjectCardProps {
   userProposals?: Proposal[];
   onDeleteProject?: (id: string) => void;
   onViewProposals?: (project: Project) => void;
+  onProposalSubmit?: () => void;
 }
 
 const ProjectCard = ({ 
   project, 
   userProposals, 
   onDeleteProject,
-  onViewProposals
+  onViewProposals,
+  onProposalSubmit
 }: ProjectCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [showProposalForm, setShowProposalForm] = useState(false);
@@ -33,18 +34,14 @@ const ProjectCard = ({
   const isTeacher = user?.role === 'teacher';
   const isProjectOwner = isTeacher && user?.id === project.teacherId;
   
-  // Find if the current student has a proposal for this project
   const userProposal = userProposals?.find(p => p.projectId === project.id);
   
-  // Check if student was previously rejected for this project (even if deleted)
   const wasRejectedBefore = isStudent && user ? 
     wasRejectedForProject(user.id, project.id) : 
     false;
   
-  // Check if the student has already selected a final project
   const hasSelectedFinalProject = isStudent && user ? hasSelectedProposal(user.id) : false;
   
-  // Format date in Arabic
   const formattedDate = formatDistanceToNow(new Date(project.createdAt), {
     addSuffix: true,
     locale: arSA
@@ -56,6 +53,9 @@ const ProjectCard = ({
   
   const handleSubmitProposal = () => {
     setShowProposalForm(false);
+    if (onProposalSubmit) {
+      onProposalSubmit();
+    }
   };
   
   return (
