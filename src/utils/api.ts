@@ -27,6 +27,7 @@ export {
   getActiveProposalsByStudentId,
   hasSelectedProposal,
   wasRejectedForProject,
+  isProjectSelectedByAnyStudent,
   createProposal,
   updateProposalStatus,
   deleteProposal

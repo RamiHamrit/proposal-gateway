@@ -4,7 +4,7 @@ import { Project } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { createProposal, getProposalsByStudentId, hasSelectedProposal, wasRejectedForProject } from "@/utils/api";
+import { createProposal, getProposalsByStudentId, hasSelectedProposal, wasRejectedForProject, isProjectSelectedByAnyStudent } from "@/utils/api";
 import { useAuth } from "@/context/AuthContext";
 
 interface ProposalFormProps {
@@ -45,6 +45,17 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
       toast({
         title: "غير مسموح",
         description: "تم رفض مقترحك لهذا المشروع مسبقًا، لا يمكنك التقديم مرة أخرى",
+        variant: "destructive",
+      });
+      onCancel();
+      return;
+    }
+    
+    // Check if the project is already selected by another student
+    if (isProjectSelectedByAnyStudent(project.id)) {
+      toast({
+        title: "غير متاح",
+        description: "هذا المشروع محجوز بالفعل من طالب آخر",
         variant: "destructive",
       });
       onCancel();

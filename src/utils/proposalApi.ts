@@ -33,6 +33,12 @@ export const hasSelectedProposal = (studentId: string): boolean => {
   return proposals.some(proposal => proposal.status === 'selected');
 };
 
+// Helper function to check if a project has been selected by any student
+export const isProjectSelectedByAnyStudent = (projectId: string): boolean => {
+  const proposals = getProposalsByProjectId(projectId);
+  return proposals.some(proposal => proposal.status === 'selected');
+};
+
 // New function to check if a student was previously rejected for a project
 export const wasRejectedForProject = (studentId: string, projectId: string): boolean => {
   // Get all proposals, including deleted ones with rejection status
