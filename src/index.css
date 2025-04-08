@@ -110,4 +110,17 @@
   .page-transition-exit {
     @apply animate-fade-out;
   }
+
+  /* RTL Utility Classes */
+  .rtl-text {
+    @apply text-right;
+  }
+  
+  .rtl-reverse {
+    @apply flex-row-reverse;
+  }
+  
+  .ltr-buttons {
+    @apply flex flex-row-reverse;
+  }
 }

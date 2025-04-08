@@ -111,7 +111,7 @@ const ProposalCard = ({
   
   return (
     <Card className="card-hover">
-      <CardHeader className="p-4">
+      <CardHeader className="p-4 rtl-text">
         <div className="flex justify-between items-center">
           <CardTitle className="text-md">
             {isTeacher ? proposal.studentName : projectTitle}
@@ -120,7 +120,7 @@ const ProposalCard = ({
         </div>
       </CardHeader>
       
-      <CardContent className="p-4 pt-0">
+      <CardContent className="p-4 pt-0 rtl-text">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {isTeacher && <User size={14} />}
           {isStudent && projectTitle && <span>المشروع: {projectTitle}</span>}
@@ -129,7 +129,7 @@ const ProposalCard = ({
         </div>
       </CardContent>
       
-      <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap">
+      <CardFooter className="p-4 pt-0 flex justify-end gap-2 flex-wrap">
         {isTeacher && proposal.status === 'pending' && (
           <>
             <Button size="sm" onClick={handleApprove}>

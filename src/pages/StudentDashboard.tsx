@@ -83,7 +83,7 @@ const StudentDashboard = () => {
           </div>
           
           <TabsContent value="projects" className="space-y-4">
-            <h2 className="text-xl font-bold">المشاريع المتاحة للتقديم</h2>
+            <h2 className="text-xl font-bold rtl-text">المشاريع المتاحة للتقديم</h2>
             
             {filteredProjects.length === 0 ? (
               <div className="text-center py-12">
@@ -105,7 +105,7 @@ const StudentDashboard = () => {
           </TabsContent>
           
           <TabsContent value="proposals" className="space-y-4">
-            <h2 className="text-xl font-bold">مقترحاتي ({userProposals.length}/3)</h2>
+            <h2 className="text-xl font-bold rtl-text">مقترحاتي ({userProposals.length}/3)</h2>
             
             {userProposals.length === 0 ? (
               <div className="text-center py-12">

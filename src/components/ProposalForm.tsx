@@ -97,19 +97,19 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
     <Dialog open={true} onOpenChange={onCancel}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>تقديم مقترح للمشروع</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="rtl-text">تقديم مقترح للمشروع</DialogTitle>
+          <DialogDescription className="rtl-text">
             هل أنت متأكد من رغبتك في تقديم مقترح لمشروع "{project.title}"؟
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground rtl-text">
             بتقديمك لهذا المقترح، سيتمكن الأستاذ {project.teacherName} من مراجعة طلبك والموافقة عليه أو رفضه. يمكنك تقديم مقترحات لما يصل إلى 3 مشاريع.
           </p>
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="ltr-buttons">
           <Button variant="outline" onClick={onCancel}>
             إلغاء
           </Button>

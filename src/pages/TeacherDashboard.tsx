@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,6 @@ const TeacherDashboard = () => {
   useEffect(() => {
     const fetchData = () => {
       if (user && user.role === 'teacher') {
-        // Fetch teacher's projects
         const teacherProjects = getProjectsByTeacherId(user.id);
         setProjects(teacherProjects);
       }
@@ -90,7 +88,7 @@ const TeacherDashboard = () => {
           </div>
           
           <TabsContent value="my-projects" className="space-y-4">
-            <h2 className="text-xl font-bold">مشاريعي ({projects.length})</h2>
+            <h2 className="text-xl font-bold rtl-text">مشاريعي ({projects.length})</h2>
             
             {filteredProjects.length === 0 ? (
               <div className="text-center py-12">
@@ -119,24 +117,22 @@ const TeacherDashboard = () => {
         </Tabs>
       </main>
       
-      {/* New Project Form */}
       <NewProjectForm 
         open={showNewProjectForm} 
         onOpenChange={setShowNewProjectForm} 
         onProjectCreated={handleRefreshData} 
       />
       
-      {/* Project Proposals Dialog */}
       <Dialog 
         open={!!selectedProject} 
         onOpenChange={(open) => !open && setSelectedProject(null)}
       >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="rtl-text">
               مقترحات المشروع: {selectedProject?.title}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="rtl-text">
               عرض وإدارة المقترحات المقدمة لهذا المشروع
             </DialogDescription>
           </DialogHeader>
@@ -153,12 +149,10 @@ const TeacherDashboard = () => {
                     key={proposal.id}
                     proposal={proposal}
                     onStatusChange={() => {
-                      // Refresh proposals after status change
                       if (selectedProject) {
                         const updatedProposals = getProposalsByProjectId(selectedProject.id);
                         setProjectProposals(updatedProposals);
                       }
-                      // Also refresh projects data
                       handleRefreshData();
                     }}
                   />
