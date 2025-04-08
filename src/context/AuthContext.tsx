@@ -1,182 +1,155 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { getLocalData, saveLocalData, initialTeachers, teacherPasswords } from '@/utils/localStorage';
 
 interface AuthContextProps {
   user: User | null;
   status: AuthStatus;
   login: (username: string, password: string, isTeacher: boolean) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   updateUserInfo: (updates: { name?: string; email?: string }) => void;
 }
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-  overrideLogin?: (username: string, password: string, isTeacher?: boolean) => Promise<any>;
-  overrideSignup?: (name: string, email: string, password: string) => Promise<any>;
-  overrideLogout?: () => Promise<any>;
-}
+export const initialTeachers = [
+  {
+    id: '1',
+    name: 'أحمد مالكي',
+    username: 'Ahmed',
+    role: 'teacher' as const,
+    projects: [],
+  },
+  {
+    id: '2',
+    name: 'فؤاد حمداوي',
+    username: 'Fouad',
+    role: 'teacher' as const,
+    projects: [],
+  },
+];
+
+// Initial dummy data for testing
+const dummyTeacherPasswords: Record<string, string> = {
+  'Ahmed': 'Ahmed1234',
+  'Fouad': 'Fouad1234',
+};
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   status: 'idle',
   login: async () => {},
   signup: async () => {},
-  logout: async () => {},
+  logout: () => {},
   updateUserInfo: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ 
-  children, 
-  overrideLogin, 
-  overrideSignup, 
-  overrideLogout 
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('idle');
   const { toast } = useToast();
   
   // Mock database for local development
   const [students, setStudents] = useState<Student[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
   const [studentPasswords, setStudentPasswords] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Check for stored user on component mount
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-        setStatus('authenticated');
-        console.log("Restored auth from localStorage: authenticated");
-      } catch (error) {
-        console.error("Error parsing stored user:", error);
-        localStorage.removeItem('user');
-        setStatus('unauthenticated');
-      }
+      setUser(JSON.parse(storedUser));
+      setStatus('authenticated');
     } else {
       setStatus('unauthenticated');
-      console.log("No auth found in localStorage: unauthenticated");
     }
 
-    // Load mock data from localStorage - especially teachers
-    const storedTeachers = getLocalData<Teacher[]>('teachers', []);
-    console.log('Loaded teachers on mount:', storedTeachers);
-    setTeachers(storedTeachers);
-    
-    // Log the available teacher passwords
-    console.log('Available teacher usernames:', Object.keys(teacherPasswords));
+    // Load mock data from localStorage if available
+    const storedStudents = localStorage.getItem('students');
+    const storedTeachers = localStorage.getItem('teachers');
+    const storedStudentPasswords = localStorage.getItem('studentPasswords');
 
-    // Load other data
-    const storedStudents = getLocalData<Student[]>('students', []);
-    const storedStudentPasswords = getLocalData<Record<string, string>>('studentPasswords', {});
+    if (storedStudents) setStudents(JSON.parse(storedStudents));
+    if (storedTeachers) setTeachers(JSON.parse(storedTeachers));
+    if (storedStudentPasswords) setStudentPasswords(JSON.parse(storedStudentPasswords));
+    else localStorage.setItem('studentPasswords', JSON.stringify({}));
     
-    if (storedStudents.length > 0) setStudents(storedStudents);
-    if (Object.keys(storedStudentPasswords).length > 0) setStudentPasswords(storedStudentPasswords);
+    // Initialize teachers in localStorage if not present
+    if (!storedTeachers) {
+      localStorage.setItem('teachers', JSON.stringify(initialTeachers));
+    }
   }, []);
 
   // Save mock data to localStorage whenever it changes
   useEffect(() => {
     if (students.length > 0) {
-      saveLocalData('students', students);
+      localStorage.setItem('students', JSON.stringify(students));
     }
     if (teachers.length > 0) {
-      saveLocalData('teachers', teachers);
+      localStorage.setItem('teachers', JSON.stringify(teachers));
     }
     if (Object.keys(studentPasswords).length > 0) {
-      saveLocalData('studentPasswords', studentPasswords);
+      localStorage.setItem('studentPasswords', JSON.stringify(studentPasswords));
     }
   }, [students, teachers, studentPasswords]);
 
   const login = async (username: string, password: string, isTeacher: boolean) => {
     try {
       setStatus('idle');
-      console.log(`Attempting ${isTeacher ? 'teacher' : 'student'} login:`, username);
-      
-      // Use overrideLogin if provided (Supabase integration)
-      if (overrideLogin && !isTeacher) {
-        console.log('Using override login for student');
-        try {
-          const handled = await overrideLogin(username, password, isTeacher);
-          
-          // If the override handled the login (for students), return
-          if (handled === true) {
-            console.log("Login was handled by override");
-            return;
-          }
-        } catch (error) {
-          console.error("Override login failed:", error);
-          // Fall back to local login if override fails and it's a teacher login
-          if (!isTeacher) {
-            throw error; // For student login, let the error propagate
-          }
-          // For teacher login, continue with local flow
-        }
-      }
       
       if (isTeacher) {
-        console.log('Teacher login flow');
-        // Check passwords directly from the teacherPasswords object
-        console.log('Available teacher usernames:', Object.keys(teacherPasswords));
-        console.log('Checking password for:', username);
-        
-        if (teacherPasswords[username] === password) {
-          // Get teachers from localStorage
-          const currentTeachers = getLocalData<Teacher[]>('teachers', initialTeachers);
-          const teacher = currentTeachers.find(t => t.username === username);
-          
+        // Teacher login
+        if (dummyTeacherPasswords[username] === password) {
+          const teacher = teachers.find(t => t.username === username);
           if (teacher) {
-            console.log('Teacher found:', teacher);
             setUser(teacher);
             localStorage.setItem('user', JSON.stringify(teacher));
             setStatus('authenticated');
-            
-            return; // Success - exit the function
-          } else {
-            console.error('Teacher account not found in stored teachers');
-            throw new Error("حساب المعلم غير موجود");
+            toast({
+              title: "تم تسجيل الدخول بنجاح",
+              description: `مرحباً، ${teacher.name}`,
+            });
+            return;
           }
-        } else {
-          console.error('Invalid teacher password');
-          throw new Error("كلمة المرور غير صحيحة");
         }
       } else {
-        console.log('Student login flow');
         // Student login (using email as username)
         if (studentPasswords[username] === password) {
           const student = students.find(s => s.email === username);
           if (student) {
-            console.log('Student found:', student);
             setUser(student);
             localStorage.setItem('user', JSON.stringify(student));
             setStatus('authenticated');
-            return; // Success - exit the function
+            toast({
+              title: "تم تسجيل الدخول بنجاح",
+              description: `مرحباً، ${student.name}`,
+            });
+            return;
           }
         }
-        
-        // If we reach here, student login failed
-        throw new Error("بيانات تسجيل الدخول غير صحيحة");
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
+      
+      // If we reach here, login failed
       setStatus('unauthenticated');
-      throw error; // Re-throw for the component to handle
+      toast({
+        title: "فشل تسجيل الدخول",
+        description: "اسم المستخدم أو كلمة المرور غير صحيحة",
+        variant: "destructive",
+      });
+    } catch (error) {
+      setStatus('unauthenticated');
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: "حدث خطأ أثناء محاولة تسجيل الدخول",
+        variant: "destructive",
+      });
     }
   };
 
   const signup = async (name: string, email: string, password: string) => {
     try {
       setStatus('idle');
-      
-      // Use overrideSignup if provided (Supabase integration)
-      if (overrideSignup) {
-        await overrideSignup(name, email, password);
-        return;
-      }
       
       // Check if email already exists
       if (students.some(s => s.email === email)) {
@@ -211,9 +184,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         title: "تم إنشاء الحساب بنجاح",
         description: "تم تسجيل دخولك تلقائياً",
       });
-      
-      // Use window.location for navigation to avoid router context issues
-      window.location.href = '/dashboard/student';
     } catch (error) {
       setStatus('unauthenticated');
       toast({
@@ -224,51 +194,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     }
   };
 
-  const logout = async () => {
-    try {
-      console.log("AuthContext: Attempting logout");
-      
-      // Use overrideLogout if provided (Supabase integration)
-      if (overrideLogout) {
-        console.log("AuthContext: Using override logout");
-        try {
-          await overrideLogout();
-          // If we got here, logout was successful, no need to continue with local logic
-          return;
-        } catch (error) {
-          console.error("Override logout error:", error);
-          // Continue with local logout as fallback
-        }
-      }
-      
-      // Always reset local state regardless of which logout method was used
-      console.log("AuthContext: Clearing local state");
-      setUser(null);
-      setStatus('unauthenticated');
-      localStorage.removeItem('user');
-      
-      console.log("AuthContext: Local state cleared, status:", 'unauthenticated');
-      
-      toast({
-        title: "تم تسجيل الخروج",
-        description: "تم تسجيل خروجك بنجاح",
-      });
-      
-      // Force navigation to home page using window.location
-      console.log("AuthContext: Navigating to / after logout");
-      window.location.href = '/';
-    } catch (error) {
-      console.error("Logout error in AuthContext:", error);
-      // Even on error, we should clear the local session
-      setUser(null);
-      setStatus('unauthenticated');
-      localStorage.removeItem('user');
-      window.location.href = '/';
-      toast({
-        title: "تم تسجيل الخروج",
-        description: "تم تسجيل خروجك مع وجود خطأ",
-      });
-    }
+  const logout = () => {
+    setUser(null);
+    setStatus('unauthenticated');
+    localStorage.removeItem('user');
+    toast({
+      title: "تم تسجيل الخروج",
+      description: "تم تسجيل خروجك بنجاح",
+    });
   };
   
   const updateUserInfo = (updates: { name?: string; email?: string }) => {

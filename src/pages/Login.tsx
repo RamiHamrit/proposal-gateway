@@ -8,12 +8,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("student");
-  const { toast } = useToast();
   
   // Set initial tab based on URL parameter
   useEffect(() => {
@@ -34,108 +32,26 @@ const Login = () => {
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherLoading, setTeacherLoading] = useState(false);
   
-  const { login, status, user } = useAuth();
-  
-  // Log current auth status for debugging and redirect if already logged in
-  useEffect(() => {
-    console.log("Current auth status:", status, "User:", user?.id);
-    
-    // If user is authenticated, redirect to appropriate dashboard
-    if (status === 'authenticated' && user) {
-      console.log("User already authenticated, redirecting to dashboard");
-      const dashboardRoute = user.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student';
-      window.location.href = dashboardRoute;
-    }
-  }, [status, user]);
+  const { login } = useAuth();
   
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!studentEmail || !studentPassword) {
-      toast({
-        title: "حقول مطلوبة",
-        description: "يرجى إدخال البريد الإلكتروني وكلمة المرور",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!studentEmail || !studentPassword) return;
     
     setStudentLoading(true);
-    try {
-      console.log("Attempting student login with:", studentEmail);
-      toast({
-        title: "جاري تسجيل الدخول...",
-        description: "يرجى الانتظار قليلاً",
-      });
-      
-      await login(studentEmail, studentPassword, false);
-      
-      // Display a success toast
-      toast({
-        title: "تم تسجيل الدخول",
-        description: "جارِ الانتقال إلى لوحة التحكم...",
-      });
-      
-      // Force redirect immediately, don't wait for auth state
-      console.log("Login completed, forcing redirect to student dashboard");
-      window.location.href = '/dashboard/student';
-      
-    } catch (error: any) {
-      console.error("Student login error:", error);
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: error.message || "تحقق من بريدك الإلكتروني وكلمة المرور",
-        variant: "destructive",
-      });
-    } finally {
-      setStudentLoading(false);
-    }
+    await login(studentEmail, studentPassword, false);
+    setStudentLoading(false);
   };
   
   const handleTeacherLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!teacherUsername || !teacherPassword) {
-      toast({
-        title: "حقول مطلوبة",
-        description: "يرجى إدخال اسم المستخدم وكلمة المرور",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!teacherUsername || !teacherPassword) return;
     
-    try {
-      setTeacherLoading(true);
-      console.log("Attempting teacher login with username:", teacherUsername);
-      toast({
-        title: "جاري تسجيل الدخول...",
-        description: "يرجى الانتظار قليلاً",
-      });
-      
-      // Important: Wait for the login promise to resolve
-      await login(teacherUsername, teacherPassword, true);
-      
-      // Display a success toast
-      toast({
-        title: "تم تسجيل الدخول",
-        description: "مرحباً بعودتك!",
-      });
-      
-      // Force redirect immediately after login completes
-      console.log("Teacher login completed, forcing redirect");
-      window.location.href = '/dashboard/teacher';
-      
-    } catch (error: any) {
-      console.error("Teacher login error:", error);
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: error.message || "تحقق من اسم المستخدم وكلمة المرور",
-        variant: "destructive",
-      });
-    } finally {
-      // Make sure loading state is reset, even if there's an error
-      setTeacherLoading(false);
-    }
+    setTeacherLoading(true);
+    await login(teacherUsername, teacherPassword, true);
+    setTeacherLoading(false);
   };
   
   return (

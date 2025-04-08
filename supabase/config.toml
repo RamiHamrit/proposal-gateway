@@ -1,5 +1,0 @@
-
-project_id = "woxcxuhcrhyoeynmuhtw"
-
-[functions.get-user-role]
-verify_jwt = true

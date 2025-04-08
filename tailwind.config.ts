@@ -132,19 +132,9 @@ export default {
 				'slide-out': 'slide-out 0.3s ease-out'
 			},
 			fontFamily: {
-				tajawal: ['Tajawal', 'sans-serif'],
 				arabic: ['Tajawal', 'sans-serif'],
-				heading: ['Tajawal', 'sans-serif']
-			},
-			fontWeight: {
-				light: '300',
-				normal: '400',
-				medium: '500',
-				semibold: '600',
-				bold: '700',
-				extrabold: '800',
-				black: '900',
-			},
+				heading: ['Amiri', 'serif']
+			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

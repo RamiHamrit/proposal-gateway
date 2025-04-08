@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { createProject } from "@/utils/projectApi";
+import { createProject } from "@/utils/api";
 import { useAuth } from "@/context/AuthContext";
 
 interface NewProjectFormProps {
@@ -51,8 +51,7 @@ const NewProjectForm = ({
     setIsSubmitting(true);
     
     try {
-      // Create project using the updated createProject function that handles both local storage and Supabase
-      await createProject(title, description, user.id, user.name);
+      createProject(title, description, user.id, user.name);
       
       toast({
         title: "تم إنشاء المشروع",
@@ -64,7 +63,6 @@ const NewProjectForm = ({
       onOpenChange(false);
       onProjectCreated();
     } catch (error) {
-      console.error("Project creation error:", error);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء إنشاء المشروع",
