@@ -1,10 +1,9 @@
-
 import { AuthProvider as LegacyAuthProvider } from '@/context/AuthContext';
 import { AuthProvider as SupabaseAuthProvider } from '@/hooks/use-supabase-auth';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { clearAuthData, teacherPasswords, getLocalData } from '@/utils/localStorage';
+import { clearAuthData, teacherPasswords } from '@/utils/localStorage';
 
 interface AuthProvidersProps {
   children: React.ReactNode;
@@ -19,9 +18,6 @@ const useLegacyAuthAdapter = () => {
     // Initialize the legacy auth adapter
     // This is just to mark that we've initialized the adapter
     setIsInitialized(true);
-    
-    // Debugging: Log available teacher credentials
-    console.log("Available teacher usernames:", Object.keys(teacherPasswords));
   }, []);
   
   // These functions implement the legacy interface using Supabase
@@ -30,20 +26,9 @@ const useLegacyAuthAdapter = () => {
       console.log("Legacy adapter login:", isTeacher ? "teacher" : "student", username);
       
       if (isTeacher) {
-        // Check if this is one of our hardcoded teachers
-        console.log("Checking teacher credentials for:", username);
-        console.log("Teacher passwords object:", teacherPasswords);
-        console.log("Expected password:", teacherPasswords[username]);
-        console.log("Provided password:", password);
-        
-        if (teacherPasswords[username] === password) {
-          console.log("Valid teacher credentials, using legacy login");
-          // Let the legacy auth provider handle this
-          return false; // Signal that we didn't handle this
-        } else {
-          console.log("Invalid teacher credentials");
-          throw new Error("Invalid teacher credentials");
-        }
+        // Let the legacy auth provider handle teacher login
+        console.log("Teacher login, delegating to legacy system");
+        return false;
       } else {
         // Student login with Supabase
         console.log("Student login with Supabase:", username);
@@ -58,8 +43,6 @@ const useLegacyAuthAdapter = () => {
         }
         
         console.log("Supabase login successful, session:", data.session?.user.id);
-        
-        // No need to force navigation as it will be done by the component
         return true;
       }
     } catch (error) {
@@ -68,79 +51,11 @@ const useLegacyAuthAdapter = () => {
     }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
-    try {
-      console.log("Legacy adapter signup:", name, email);
-      const { error, data } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role: 'student'
-          }
-        }
-      });
-      
-      if (error) {
-        console.error("Supabase signup error:", error);
-        throw error;
-      }
-      
-      console.log("Signup successful, user:", data.user?.id);
-      
-      // No need to force navigation as it will be done by the component
-      return true;
-    } catch (error) {
-      console.error("Signup error in legacy adapter:", error);
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      console.log("Legacy adapter: Attempting to sign out");
-      
-      // First clear any local auth data
-      clearAuthData();
-      console.log("Legacy adapter: Local auth data cleared");
-      
-      // Then sign out from Supabase if there's an active session
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Logout error in legacy adapter:", error);
-        toast({
-          title: "خطأ",
-          description: "حدث خطأ أثناء تسجيل الخروج",
-          variant: "destructive",
-        });
-        throw error;
-      }
-      
-      console.log("Legacy adapter: Sign out successful");
-      toast({
-        title: "تم تسجيل الخروج",
-        description: "تم تسجيل خروجك بنجاح",
-      });
-      
-      // Force a page reload to clear all state
-      window.location.href = '/';
-      
-      return true;
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Force a page reload even if there was an error
-      window.location.href = '/';
-      throw error;
-    }
-  };
-
   return {
     isInitialized,
     login,
-    signup,
-    logout
+    signup: async () => false, // Let the legacy auth provider handle this
+    logout: async () => false   // Let the legacy auth provider handle this
   };
 };
 

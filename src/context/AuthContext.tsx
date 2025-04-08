@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Student, Teacher, AuthStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -50,9 +49,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     // Check for stored user on component mount
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setStatus('authenticated');
-      console.log("Restored auth from localStorage: authenticated");
+      try {
+        setUser(JSON.parse(storedUser));
+        setStatus('authenticated');
+        console.log("Restored auth from localStorage: authenticated");
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+        localStorage.removeItem('user');
+        setStatus('unauthenticated');
+      }
     } else {
       setStatus('unauthenticated');
       console.log("No auth found in localStorage: unauthenticated");
@@ -64,8 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     setTeachers(storedTeachers);
     
     // Log the available teacher passwords
-    const storedTeacherPasswords = getLocalData<Record<string, string>>('teacherPasswords', {});
-    console.log('Available teacher usernames:', Object.keys(storedTeacherPasswords));
+    console.log('Available teacher usernames:', Object.keys(teacherPasswords));
 
     // Load other data
     const storedStudents = getLocalData<Student[]>('students', []);
@@ -94,8 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       console.log(`Attempting ${isTeacher ? 'teacher' : 'student'} login:`, username);
       
       // Use overrideLogin if provided (Supabase integration)
-      if (overrideLogin) {
-        console.log('Using override login');
+      if (overrideLogin && !isTeacher) {
+        console.log('Using override login for student');
         try {
           const handled = await overrideLogin(username, password, isTeacher);
           
@@ -116,12 +120,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       
       if (isTeacher) {
         console.log('Teacher login flow');
-        // Get latest teacher passwords from localStorage
-        const currentTeacherPasswords = getLocalData<Record<string, string>>('teacherPasswords', teacherPasswords);
-        console.log('Available teacher usernames:', Object.keys(currentTeacherPasswords));
+        // Check passwords directly from the teacherPasswords object
+        console.log('Available teacher usernames:', Object.keys(teacherPasswords));
+        console.log('Checking password for:', username);
         
-        if (currentTeacherPasswords[username] === password) {
-          // Get latest teachers from localStorage
+        if (teacherPasswords[username] === password) {
+          // Get teachers from localStorage
           const currentTeachers = getLocalData<Teacher[]>('teachers', initialTeachers);
           const teacher = currentTeachers.find(t => t.username === username);
           
@@ -130,19 +134,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
             setUser(teacher);
             localStorage.setItem('user', JSON.stringify(teacher));
             setStatus('authenticated');
-            toast({
-              title: "تم تسجيل الدخول بنجاح",
-              description: `مرحباً، ${teacher.name}`,
-            });
             
-            // Use window.location for navigation to avoid router context issues
-            window.location.href = '/dashboard/teacher';
-            return;
+            return; // Success - exit the function
           } else {
             console.error('Teacher account not found in stored teachers');
+            throw new Error("حساب المعلم غير موجود");
           }
         } else {
           console.error('Invalid teacher password');
+          throw new Error("كلمة المرور غير صحيحة");
         }
       } else {
         console.log('Student login flow');
@@ -154,34 +154,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
             setUser(student);
             localStorage.setItem('user', JSON.stringify(student));
             setStatus('authenticated');
-            toast({
-              title: "تم تسجيل الدخول بنجاح",
-              description: `مرحباً، ${student.name}`,
-            });
-            
-            // Use window.location for navigation to avoid router context issues
-            window.location.href = '/dashboard/student';
-            return;
+            return; // Success - exit the function
           }
         }
+        
+        // If we reach here, student login failed
+        throw new Error("بيانات تسجيل الدخول غير صحيحة");
       }
-      
-      // If we reach here, login failed
-      console.log('Login failed - no matching credentials');
-      setStatus('unauthenticated');
-      toast({
-        title: "فشل تسجيل الدخول",
-        description: "اسم المستخدم أو كلمة المرور غير صحيحة",
-        variant: "destructive",
-      });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       setStatus('unauthenticated');
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: "حدث خطأ أثناء محاولة تسجيل الدخول",
-        variant: "destructive",
-      });
+      throw error; // Re-throw for the component to handle
     }
   };
 

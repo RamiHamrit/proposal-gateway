@@ -104,23 +104,24 @@ const Login = () => {
       return;
     }
     
-    setTeacherLoading(true);
     try {
+      setTeacherLoading(true);
       console.log("Attempting teacher login with username:", teacherUsername);
       toast({
         title: "جاري تسجيل الدخول...",
         description: "يرجى الانتظار قليلاً",
       });
       
+      // Important: Wait for the login promise to resolve
       await login(teacherUsername, teacherPassword, true);
       
-      // For teachers, we display a success toast
+      // Display a success toast
       toast({
         title: "تم تسجيل الدخول",
         description: "مرحباً بعودتك!",
       });
       
-      // Force redirect immediately, don't wait for auth state
+      // Force redirect immediately after login completes
       console.log("Teacher login completed, forcing redirect");
       window.location.href = '/dashboard/teacher';
       
@@ -132,6 +133,7 @@ const Login = () => {
         variant: "destructive",
       });
     } finally {
+      // Make sure loading state is reset, even if there's an error
       setTeacherLoading(false);
     }
   };
