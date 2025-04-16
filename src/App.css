@@ -1,3 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+
+:root {
+  --font-arabic: 'Tajawal', sans-serif;
+}
+
+body, html {
+  font-family: var(--font-arabic), 'Inter', sans-serif;
+}
+
+/* Utility classes for font weights */
+.font-arabic-regular { font-family: var(--font-arabic), sans-serif; font-weight: 400; }
+.font-arabic-medium { font-family: var(--font-arabic), sans-serif; font-weight: 500; }
+.font-arabic-semibold { font-family: var(--font-arabic), sans-serif; font-weight: 600; }
+.font-arabic-bold { font-family: var(--font-arabic), sans-serif; font-weight: 700; }
+
+/* Optionally, override .font-tajwal to use Tajawal for legacy usage */
+.font-tajwal {
+  font-family: var(--font-arabic), sans-serif;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

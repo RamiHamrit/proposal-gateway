@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   
-  const { signup } = useAuth();
+  const { signUp } = useAuth();
   
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +39,10 @@ const SignUp = () => {
     
     setLoading(true);
     try {
-      await signup(name, email, password);
+      await signUp(name, email, password);
       // Redirect handled by AuthContext via React Router
-    } catch (error) {
-      setError("حدث خطأ أثناء إنشاء الحساب");
+    } catch (error: any) {
+      setError(error.message || "حدث خطأ أثناء إنشاء الحساب");
     } finally {
       setLoading(false);
     }

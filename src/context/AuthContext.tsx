@@ -1,230 +1,189 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, Student, Teacher, AuthStatus } from '@/types';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/hooks/use-toast';
+
+// Define User type
+export type User = {
+  id: string;
+  email: string;
+  role: 'student' | 'teacher';
+  name?: string;
+};
+
+export type AuthStatus = 'idle' | 'authenticated' | 'unauthenticated';
 
 interface AuthContextProps {
   user: User | null;
   status: AuthStatus;
-  login: (username: string, password: string, isTeacher: boolean) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  updateUserInfo: (updates: { name?: string; email?: string }) => void;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateUserInfo: (updates: { name?: string; email?: string }) => Promise<void>;
 }
-
-export const initialTeachers = [
-  {
-    id: '1',
-    name: 'أحمد مالكي',
-    username: 'Ahmed',
-    role: 'teacher' as const,
-    projects: [],
-  },
-  {
-    id: '2',
-    name: 'فؤاد حمداوي',
-    username: 'Fouad',
-    role: 'teacher' as const,
-    projects: [],
-  },
-];
-
-// Initial dummy data for testing
-const dummyTeacherPasswords: Record<string, string> = {
-  'Ahmed': 'Ahmed1234',
-  'Fouad': 'Fouad1234',
-};
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   status: 'idle',
-  login: async () => {},
-  signup: async () => {},
-  logout: () => {},
-  updateUserInfo: () => {},
+  signUp: async () => {},
+  signIn: async () => {},
+  signOut: async () => {},
+  updateUserInfo: async () => {},
 });
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('idle');
   const { toast } = useToast();
-  
-  // Mock database for local development
-  const [students, setStudents] = useState<Student[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachers);
-  const [studentPasswords, setStudentPasswords] = useState<Record<string, string>>({});
 
+  // Handle session changes and fetch user info
   useEffect(() => {
-    // Check for stored user on component mount
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setStatus('authenticated');
-    } else {
-      setStatus('unauthenticated');
-    }
-
-    // Load mock data from localStorage if available
-    const storedStudents = localStorage.getItem('students');
-    const storedTeachers = localStorage.getItem('teachers');
-    const storedStudentPasswords = localStorage.getItem('studentPasswords');
-
-    if (storedStudents) setStudents(JSON.parse(storedStudents));
-    if (storedTeachers) setTeachers(JSON.parse(storedTeachers));
-    if (storedStudentPasswords) setStudentPasswords(JSON.parse(storedStudentPasswords));
-    else localStorage.setItem('studentPasswords', JSON.stringify({}));
-    
-    // Initialize teachers in localStorage if not present
-    if (!storedTeachers) {
-      localStorage.setItem('teachers', JSON.stringify(initialTeachers));
-    }
-  }, []);
-
-  // Save mock data to localStorage whenever it changes
-  useEffect(() => {
-    if (students.length > 0) {
-      localStorage.setItem('students', JSON.stringify(students));
-    }
-    if (teachers.length > 0) {
-      localStorage.setItem('teachers', JSON.stringify(teachers));
-    }
-    if (Object.keys(studentPasswords).length > 0) {
-      localStorage.setItem('studentPasswords', JSON.stringify(studentPasswords));
-    }
-  }, [students, teachers, studentPasswords]);
-
-  const login = async (username: string, password: string, isTeacher: boolean) => {
-    try {
+    const getSessionUser = async () => {
       setStatus('idle');
-      
-      if (isTeacher) {
-        // Teacher login
-        if (dummyTeacherPasswords[username] === password) {
-          const teacher = teachers.find(t => t.username === username);
-          if (teacher) {
-            setUser(teacher);
-            localStorage.setItem('user', JSON.stringify(teacher));
-            setStatus('authenticated');
-            toast({
-              title: "تم تسجيل الدخول بنجاح",
-              description: `مرحباً، ${teacher.name}`,
-            });
-            return;
-          }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) {
+        // Fetch user role from users table
+        const { data: dbUser, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (dbUser && !error) {
+          setUser({
+            id: dbUser.id,
+            email: dbUser.email,
+            name: dbUser.name,
+            role: dbUser.role,
+          });
+          setStatus('authenticated');
+        } else {
+          setUser(null);
+          setStatus('unauthenticated');
         }
       } else {
-        // Student login (using email as username)
-        if (studentPasswords[username] === password) {
-          const student = students.find(s => s.email === username);
-          if (student) {
-            setUser(student);
-            localStorage.setItem('user', JSON.stringify(student));
-            setStatus('authenticated');
-            toast({
-              title: "تم تسجيل الدخول بنجاح",
-              description: `مرحباً، ${student.name}`,
-            });
-            return;
-          }
-        }
-      }
-      
-      // If we reach here, login failed
-      setStatus('unauthenticated');
-      toast({
-        title: "فشل تسجيل الدخول",
-        description: "اسم المستخدم أو كلمة المرور غير صحيحة",
-        variant: "destructive",
-      });
-    } catch (error) {
-      setStatus('unauthenticated');
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: "حدث خطأ أثناء محاولة تسجيل الدخول",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const signup = async (name: string, email: string, password: string) => {
-    try {
-      setStatus('idle');
-      
-      // Check if email already exists
-      if (students.some(s => s.email === email)) {
+        setUser(null);
         setStatus('unauthenticated');
-        toast({
-          title: "البريد الإلكتروني مستخدم",
-          description: "هذا البريد الإلكتروني مسجل بالفعل",
-          variant: "destructive",
-        });
-        return;
       }
-      
-      // Create new student
-      const newStudent: Student = {
-        id: `student-${Date.now()}`,
-        name,
-        email,
-        role: 'student',
-        proposals: [],
-      };
-      
-      // Save student and password
-      setStudents(prev => [...prev, newStudent]);
-      setStudentPasswords(prev => ({ ...prev, [email]: password }));
-      
-      // Auto login after signup
-      setUser(newStudent);
-      localStorage.setItem('user', JSON.stringify(newStudent));
-      setStatus('authenticated');
-      
-      toast({
-        title: "تم إنشاء الحساب بنجاح",
-        description: "تم تسجيل دخولك تلقائياً",
-      });
-    } catch (error) {
+    };
+    getSessionUser();
+    // Listen to auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      getSessionUser();
+    });
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  const signUp = async (name: string, email: string, password: string) => {
+    setStatus('idle');
+    // Sign up with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error || !data.user) {
       setStatus('unauthenticated');
       toast({
-        title: "خطأ في إنشاء الحساب",
-        description: "حدث خطأ أثناء محاولة إنشاء الحساب",
-        variant: "destructive",
+        title: 'خطأ في إنشاء الحساب',
+        description: error?.message || 'حدث خطأ أثناء محاولة إنشاء الحساب',
+        variant: 'destructive',
       });
+      return;
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setStatus('unauthenticated');
-    localStorage.removeItem('user');
+    // Insert user into users table with role 'student'
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert([{ id: data.user.id, email, role: 'student', name }]);
+    if (insertError) {
+      setStatus('unauthenticated');
+      toast({
+        title: 'خطأ في إنشاء الحساب',
+        description: insertError.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    setUser({ id: data.user.id, email, role: 'student', name });
+    setStatus('authenticated');
     toast({
-      title: "تم تسجيل الخروج",
-      description: "تم تسجيل خروجك بنجاح",
+      title: 'تم إنشاء الحساب بنجاح',
+      description: 'تم تسجيل دخولك تلقائياً',
     });
   };
-  
-  const updateUserInfo = (updates: { name?: string; email?: string }) => {
-    if (!user) return;
-    
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    
-    // Update in the appropriate collection
-    if (user.role === 'student') {
-      setStudents(prev => 
-        prev.map(s => s.id === user.id ? { ...s, ...updates } : s)
-      );
-    } else if (user.role === 'teacher') {
-      setTeachers(prev => 
-        prev.map(t => t.id === user.id ? { ...t, ...updates } : t)
-      );
+
+  const signIn = async (email: string, password: string) => {
+    setStatus('idle');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      setStatus('unauthenticated');
+      toast({
+        title: 'فشل تسجيل الدخول',
+        description: error?.message || 'اسم المستخدم أو كلمة المرور غير صحيحة',
+        variant: 'destructive',
+      });
+      return;
     }
+    // Fetch user role from users table
+    const { data: dbUser, error: dbError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+    if (!dbUser || dbError) {
+      setStatus('unauthenticated');
+      toast({
+        title: 'فشل تسجيل الدخول',
+        description: dbError?.message || 'لم يتم العثور على المستخدم في قاعدة البيانات',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setUser({ id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role });
+    setStatus('authenticated');
+    toast({
+      title: 'تم تسجيل الدخول بنجاح',
+      description: `مرحباً، ${dbUser.name || dbUser.email}`,
+    });
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setStatus('unauthenticated');
+    toast({
+      title: 'تم تسجيل الخروج',
+      description: 'تم تسجيل خروجك بنجاح',
+    });
+  };
+
+  const updateUserInfo = async (updates: { name?: string; email?: string }) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', user.id);
+    if (error) {
+      toast({
+        title: 'خطأ في تحديث المعلومات',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+    setUser({ ...user, ...updates });
+    toast({
+      title: 'تم تحديث المعلومات',
+      description: 'تم تحديث معلومات المستخدم بنجاح',
+    });
   };
 
   return (
-    <AuthContext.Provider value={{ user, status, login, signup, logout, updateUserInfo }}>
+    <AuthContext.Provider value={{ user, status, signUp, signIn, signOut, updateUserInfo }}>
       {children}
     </AuthContext.Provider>
   );

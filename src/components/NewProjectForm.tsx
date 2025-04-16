@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { createProject } from "@/utils/api";
+import { createProject } from "@/utils/projectApi.supabase";
 import { useAuth } from "@/context/AuthContext";
 
 interface NewProjectFormProps {
@@ -15,21 +14,17 @@ interface NewProjectFormProps {
   onProjectCreated: () => void;
 }
 
-const NewProjectForm = ({ 
-  open, 
-  onOpenChange, 
-  onProjectCreated 
-}: NewProjectFormProps) => {
-  const [title, setTitle] = useState("");
+const NewProjectForm = ({ open, onOpenChange, onProjectCreated }: NewProjectFormProps) => {
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!title.trim() || !description.trim()) {
+
+    if (!name.trim() || !description.trim()) {
       toast({
         title: "بيانات غير مكتملة",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -37,8 +32,8 @@ const NewProjectForm = ({
       });
       return;
     }
-    
-    if (!user || user.role !== 'teacher') {
+
+    if (!user || user.role !== "teacher") {
       toast({
         title: "غير مصرح",
         description: "يجب تسجيل الدخول كأستاذ لإنشاء مشروع",
@@ -47,18 +42,16 @@ const NewProjectForm = ({
       onOpenChange(false);
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      createProject(title, description, user.id, user.name);
-      
+      await createProject(name, description, user.id, user.name); // user.name if you added teacher_name
       toast({
         title: "تم إنشاء المشروع",
         description: "تم إنشاء المشروع الجديد بنجاح",
       });
-      
-      setTitle("");
+      setName("");
       setDescription("");
       onOpenChange(false);
       onProjectCreated();
@@ -72,30 +65,26 @@ const NewProjectForm = ({
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>إنشاء مشروع جديد</DialogTitle>
-          <DialogDescription>
-            أضف تفاصيل المشروع الجديد ليتمكن الطلاب من تقديم مقترحاتهم.
-          </DialogDescription>
+          <DialogTitle>إضافة مشروع جديد</DialogTitle>
+          <DialogDescription>يرجى ملء جميع الحقول لإنشاء مشروع جديد</DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">عنوان المشروع</Label>
+              <Label htmlFor="name">اسم المشروع</Label>
               <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="أدخل عنوان المشروع"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="أدخل اسم المشروع"
                 className="col-span-3"
               />
             </div>
-            
             <div className="grid gap-2">
               <Label htmlFor="description">وصف المشروع</Label>
               <Textarea
@@ -107,7 +96,6 @@ const NewProjectForm = ({
               />
             </div>
           </div>
-          
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               إلغاء

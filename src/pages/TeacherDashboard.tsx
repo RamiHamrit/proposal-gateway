@@ -9,7 +9,9 @@ import ProposalCard from "@/components/ProposalCard";
 import NewProjectForm from "@/components/NewProjectForm";
 import { Project, Proposal } from "@/types";
 import { useAuth } from "@/context/AuthContext";
-import { getProjectsByTeacherId, getProposalsByProjectId, deleteProject } from "@/utils/api";
+// import { getProjectsByTeacherId, getProposalsByProjectId, deleteProject, getProjectById } from "@/utils/api";
+import { getProjectsByTeacherId, deleteProject } from "@/utils/projectApi.supabase";
+import { getProposalsByProjectId } from "@/utils/api";
 import { Plus, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,44 +19,47 @@ const TeacherDashboard = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [refreshData, setRefreshData] = useState(0);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectProposals, setProjectProposals] = useState<Proposal[]>([]);
+  const [refreshData, setRefreshData] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
   
   useEffect(() => {
-    const fetchData = () => {
+    const fetchData = async () => {
       if (user && user.role === 'teacher') {
-        const teacherProjects = getProjectsByTeacherId(user.id);
+        const teacherProjects = await getProjectsByTeacherId(user.id);
         setProjects(teacherProjects);
       }
     };
-    
     fetchData();
   }, [user, refreshData]);
-  
+
   const handleRefreshData = () => {
     setRefreshData(prev => prev + 1);
   };
-  
-  const handleDeleteProject = (id: string) => {
-    deleteProject(id);
+
+  const handleDeleteProject = async (id: string) => {
+    await deleteProject(id);
     toast({
       title: "تم حذف المشروع",
       description: "تم حذف المشروع بنجاح",
     });
-    handleRefreshData();
   };
   
-  const handleViewProposals = (project: Project) => {
+  const handleViewProposals = async (project: Project) => {
     setSelectedProject(project);
-    const proposals = getProposalsByProjectId(project.id);
-    setProjectProposals(proposals);
+    try {
+      const proposals = await getProposalsByProjectId(project.id);
+      setProjectProposals(proposals);
+    } catch (error) {
+      setProjectProposals([]);
+    }
   };
   
+  // Fix: Use project.name instead of project.title due to schema update
   const filteredProjects = projects.filter(project => 
-    project.title.includes(searchTerm) || 
+    project.name.includes(searchTerm) || 
     project.description.includes(searchTerm)
   );
   
@@ -129,10 +134,10 @@ const TeacherDashboard = () => {
       >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle className="rtl-text">
-              مقترحات المشروع: {selectedProject?.title}
+            <DialogTitle className="text-right">
+              مقترحات المشروع: {selectedProject?.name}
             </DialogTitle>
-            <DialogDescription className="rtl-text">
+            <DialogDescription className="text-right">
               عرض وإدارة المقترحات المقدمة لهذا المشروع
             </DialogDescription>
           </DialogHeader>
@@ -148,12 +153,15 @@ const TeacherDashboard = () => {
                   <ProposalCard
                     key={proposal.id}
                     proposal={proposal}
-                    onStatusChange={() => {
+                    onStatusChange={async () => {
                       if (selectedProject) {
-                        const updatedProposals = getProposalsByProjectId(selectedProject.id);
-                        setProjectProposals(updatedProposals);
+                        try {
+                          const updatedProposals = await getProposalsByProjectId(selectedProject.id);
+                          setProjectProposals(updatedProposals);
+                        } catch {
+                          setProjectProposals([]);
+                        }
                       }
-                      handleRefreshData();
                     }}
                   />
                 ))}

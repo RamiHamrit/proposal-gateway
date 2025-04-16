@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,52 +25,69 @@ const Login = () => {
   const [studentEmail, setStudentEmail] = useState("");
   const [studentPassword, setStudentPassword] = useState("");
   const [studentLoading, setStudentLoading] = useState(false);
+  const [studentError, setStudentError] = useState("");
   
   // Teacher login state
-  const [teacherUsername, setTeacherUsername] = useState("");
+  const [teacherEmail, setTeacherEmail] = useState("");
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherLoading, setTeacherLoading] = useState(false);
+  const [teacherError, setTeacherError] = useState("");
   
-  const { login } = useAuth();
+  const { signIn, status } = useAuth();
   
   const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!studentEmail || !studentPassword) return;
-    
+    setStudentError("");
+    if (!studentEmail || !studentPassword) {
+      setStudentError("يرجى ملء جميع الحقول المطلوبة");
+      return;
+    }
     setStudentLoading(true);
-    await login(studentEmail, studentPassword, false);
+    try {
+      await signIn(studentEmail, studentPassword);
+    } catch (error: any) {
+      setStudentError(error.message || "فشل تسجيل الدخول");
+    }
     setStudentLoading(false);
   };
-  
+
   const handleTeacherLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!teacherUsername || !teacherPassword) return;
-    
+    setTeacherError("");
+    if (!teacherEmail || !teacherPassword) {
+      setTeacherError("يرجى ملء جميع الحقول المطلوبة");
+      return;
+    }
     setTeacherLoading(true);
-    await login(teacherUsername, teacherPassword, true);
+    try {
+      await signIn(teacherEmail, teacherPassword);
+    } catch (error: any) {
+      setTeacherError(error.message || "فشل تسجيل الدخول");
+    }
     setTeacherLoading(false);
   };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary/30 p-4">
-      <div className="max-w-md w-full">
+      <div className="max-w-md w-full mx-auto">
         <Link 
           to="/" 
           className="flex justify-center mb-8 text-primary hover:underline"
         >
           العودة إلى الصفحة الرئيسية
         </Link>
-        
         <Card className="w-full animate-fade-in shadow-lg">
           <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center">
+              <div className="bg-primary/10 p-3 rounded-full">
+                <GraduationCap className="h-6 w-6 text-primary" />
+              </div>
+            </div>
             <CardTitle className="text-2xl font-heading">تسجيل الدخول</CardTitle>
             <CardDescription>
               اختر نوع الحساب وأدخل بياناتك لتسجيل الدخول
             </CardDescription>
           </CardHeader>
-          
           <CardContent className="pt-0">
             <Tabs 
               defaultValue="student" 
@@ -89,9 +105,8 @@ const Login = () => {
                   <span>أستاذ</span>
                 </TabsTrigger>
               </TabsList>
-              
               <TabsContent value="student">
-                <form onSubmit={handleStudentLogin}>
+                <form onSubmit={handleStudentLogin} className="rtl-text text-right">
                   <div className="grid gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="student-email">البريد الإلكتروني</Label>
@@ -102,13 +117,11 @@ const Login = () => {
                         value={studentEmail}
                         onChange={(e) => setStudentEmail(e.target.value)}
                         required
+                        className="text-right placeholder:text-right"
                       />
                     </div>
-                    
                     <div className="grid gap-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="student-password">كلمة المرور</Label>
-                      </div>
+                      <Label htmlFor="student-password" className="text-right block w-full">كلمة المرور</Label>
                       <Input
                         id="student-password"
                         type="password"
@@ -116,45 +129,52 @@ const Login = () => {
                         value={studentPassword}
                         onChange={(e) => setStudentPassword(e.target.value)}
                         required
+                        className="text-right placeholder:text-right"
                       />
                     </div>
-                    
+                    {studentError && (
+                      <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+                        {studentError}
+                      </div>
+                    )}
                     <Button type="submit" className="w-full" disabled={studentLoading}>
                       {studentLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
                     </Button>
                   </div>
                 </form>
               </TabsContent>
-              
               <TabsContent value="teacher">
-                <form onSubmit={handleTeacherLogin}>
+                <form onSubmit={handleTeacherLogin} className="rtl-text text-right">
                   <div className="grid gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="teacher-username">اسم المستخدم</Label>
+                      <Label htmlFor="teacher-email">البريد الإلكتروني</Label>
                       <Input
-                        id="teacher-username"
-                        type="text"
-                        placeholder="أدخل اسم المستخدم"
-                        value={teacherUsername}
-                        onChange={(e) => setTeacherUsername(e.target.value)}
+                        id="teacher-email"
+                        type="email"
+                        placeholder="أدخل البريد الإلكتروني للأستاذ"
+                        value={teacherEmail}
+                        onChange={(e) => setTeacherEmail(e.target.value)}
                         required
+                        className="text-right placeholder:text-right"
                       />
                     </div>
-                    
                     <div className="grid gap-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="teacher-password">كلمة المرور</Label>
-                      </div>
+                      <Label htmlFor="teacher-password" className="text-right block w-full">كلمة المرور</Label>
                       <Input
                         id="teacher-password"
                         type="password"
-                        placeholder="أدخل كلمة المرور"
+                        placeholder="أدخل كلمة المرور للأستاذ"
                         value={teacherPassword}
                         onChange={(e) => setTeacherPassword(e.target.value)}
                         required
+                        className="text-right placeholder:text-right"
                       />
                     </div>
-                    
+                    {teacherError && (
+                      <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
+                        {teacherError}
+                      </div>
+                    )}
                     <Button type="submit" className="w-full" disabled={teacherLoading}>
                       {teacherLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
                     </Button>
@@ -163,7 +183,6 @@ const Login = () => {
               </TabsContent>
             </Tabs>
           </CardContent>
-          
           <CardFooter className="flex flex-col gap-4">
             {activeTab === "student" && (
               <div className="text-center text-sm text-muted-foreground">

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -67,8 +66,8 @@ const UserSettingsDialog = ({ open, onOpenChange }: UserSettingsDialogProps) => 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>إعدادات الحساب</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-right">إعدادات الحساب</DialogTitle>
+          <DialogDescription className="text-right">
             قم بتعديل معلوماتك الشخصية هنا. اضغط حفظ عندما تنتهي.
           </DialogDescription>
         </DialogHeader>

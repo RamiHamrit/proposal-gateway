@@ -1,7 +1,6 @@
-
 import { Proposal, Student } from '@/types';
 import { getLocalData, saveLocalData } from './localStorage';
-import { getProjects } from './projectApi';
+import { getProjects, getProjectsByTeacherId } from './projectApi';
 
 /**
  * API functions for managing proposals
@@ -244,4 +243,18 @@ export const deleteProposal = (id: string): void => {
   });
   
   saveLocalData('projects', updatedProjects);
+};
+
+/**
+ * Get all proposals for all projects created by a teacher
+ */
+export const getAllProposalsForTeacher = (teacherId: string): Proposal[] => {
+  // Get all projects for this teacher
+  const teacherProjects = getProjectsByTeacherId(teacherId);
+  // Get all proposals
+  const allProposals = getProposals();
+  // Filter proposals that belong to the teacher's projects
+  return allProposals.filter(proposal => 
+    teacherProjects.some(project => project.id === proposal.projectId)
+  );
 };

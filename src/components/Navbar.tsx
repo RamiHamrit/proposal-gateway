@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, GraduationCap } from "lucide-react";
 import UserSettingsDialog from "./UserSettingsDialog";
 
 interface NavbarProps {
@@ -11,26 +10,31 @@ interface NavbarProps {
 }
 
 const Navbar = ({ title }: NavbarProps) => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-heading font-bold">
-            {title || "نظام اختيار مشاريع التخرج"}
+        <div className="flex items-center gap-3">
+          <div className="bg-[#635BFF]/10 p-2 rounded-lg border border-[#635BFF]/20">
+            <GraduationCap className="h-6 w-6 text-[#635BFF]" />
+          </div>
+          <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#0A2540] to-[#0A2540]/80 bg-clip-text text-transparent font-tajwal">
+            {title || "منصة التأطير"}
           </h1>
         </div>
         
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-[#0A2540]">
+                <div className="bg-[#635BFF]/10 p-1.5 rounded-full">
+                  <User className="h-4 w-4 text-[#635BFF]" />
+                </div>
                 <span className="text-sm font-medium">
-                  {user.name}
-                  <span className="text-xs text-muted-foreground mr-2">
+                  <span className="font-inter">{user.name}</span>
+                  <span className="text-xs text-[#0A2540]/70 mr-2 font-tajwal">
                     ({user.role === 'student' ? 'طالب' : 'أستاذ'})
                   </span>
                 </span>
@@ -41,20 +45,20 @@ const Navbar = ({ title }: NavbarProps) => {
                   variant="ghost" 
                   size="sm"
                   onClick={() => setSettingsOpen(true)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-[#0A2540]/70 hover:text-[#0A2540]"
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
               )}
               
               <Button 
-                variant="ghost" 
+                variant="secondary" 
                 size="sm" 
-                onClick={logout}
-                className="text-muted-foreground hover:text-foreground"
+                onClick={signOut}
+                className="btn-secondary font-tajwal"
               >
                 <LogOut className="h-4 w-4 ml-2" />
-                تسجيل الخروج
+                <span>تسجيل الخروج</span>
               </Button>
               
               {user && user.role === 'student' && (
@@ -62,12 +66,12 @@ const Navbar = ({ title }: NavbarProps) => {
               )}
             </>
           ) : (
-            <div className="flex gap-2">
-              <Button asChild size="sm" variant="outline">
-                <Link to="/login">تسجيل الدخول</Link>
+            <div className="flex gap-3">
+              <Button asChild size="sm" variant="secondary" className="btn-secondary font-tajwal">
+                <Link to="/login"><span>تسجيل الدخول</span></Link>
               </Button>
-              <Button asChild size="sm">
-                <Link to="/signup">إنشاء حساب</Link>
+              <Button asChild size="sm" className="shadow-sm transition-all hover:shadow-md bg-[#635BFF] hover:bg-[#635BFF]/90 font-tajwal">
+                <Link to="/signup"><span>إنشاء حساب</span></Link>
               </Button>
             </div>
           )}
