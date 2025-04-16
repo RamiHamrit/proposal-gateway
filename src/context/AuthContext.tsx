@@ -121,9 +121,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
       setStatus('unauthenticated');
+      // Always show Arabic for invalid credentials
+      let errorMsg = error?.message;
+      if (errorMsg === 'Invalid login credentials') {
+        errorMsg = 'بيانات تسجيل الدخول غير صحيحة';
+      }
       toast({
         title: 'فشل تسجيل الدخول',
-        description: error?.message || 'اسم المستخدم أو كلمة المرور غير صحيحة',
+        description: errorMsg || 'اسم المستخدم أو كلمة المرور غير صحيحة',
         variant: 'destructive',
       });
       return;
