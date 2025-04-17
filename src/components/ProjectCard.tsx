@@ -14,6 +14,7 @@ import { hasSelectedProposal, wasRejectedForProject, isProjectSelectedByAnyStude
 interface ProjectCardProps {
   project: Project;
   userProposals?: Proposal[];
+  proposalCount?: number;
   onDeleteProject?: (id: string) => void;
   onViewProposals?: (project: Project) => void;
   onProposalSubmit?: () => void;
@@ -22,6 +23,7 @@ interface ProjectCardProps {
 const ProjectCard = ({
   project,
   userProposals,
+  proposalCount,
   onDeleteProject,
   onViewProposals,
   onProposalSubmit
@@ -34,7 +36,7 @@ const ProjectCard = ({
   const isStudent = user?.role === 'student';
   const isTeacher = user?.role === 'teacher';
   const isProjectOwner = isTeacher && user?.id === project.created_by;
-  const userProposal = userProposals?.find(p => p.projectId === project.id);
+  const userProposal = userProposals?.find(p => p.project_id === project.id);
   const wasRejectedBefore = isStudent && user ? wasRejectedForProject(user.id, project.id) : false;
   const hasSelectedFinalProject = isStudent && user ? hasSelectedProposal(user.id) : false;
 
@@ -60,7 +62,7 @@ const ProjectCard = ({
   };
   
   return (
-    <Card className={`overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 ${expanded ? 'shadow-sm' : ''}`}>
+    <Card className={`overflow-hidden transition-all duration-300 hover:shadow-[0_8px_32px_rgba(60,60,60,0.08)] hover:-translate-y-1 rounded-xl ${expanded ? 'shadow-sm' : ''}`}>
       <CardHeader className="p-4 cursor-pointer rtl-text" onClick={toggleExpand}>
         <div className="flex justify-between items-center">
           <CardTitle className={`text-xl text-right ${!titleInArabic ? 'en' : ''}`}>{project.name}</CardTitle>
@@ -202,7 +204,7 @@ const ProjectCard = ({
                   }} 
                   variant="outline"
                 >
-                  عرض المقترحات
+                  عرض المقترحات{typeof proposalCount === 'number' ? ` (${proposalCount})` : ''}
                 </Button>
               </div>
             )}

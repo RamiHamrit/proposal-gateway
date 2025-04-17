@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import ProjectCard from "@/components/ProjectCard";
@@ -22,6 +22,10 @@ const TeacherDashboard = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectProposals, setProjectProposals] = useState<Proposal[]>([]);
   const [refreshData, setRefreshData] = useState(0);
+  const [proposalCounts, setProposalCounts] = useState<Record<string, number>>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -30,6 +34,19 @@ const TeacherDashboard = () => {
       if (user && user.role === 'teacher') {
         const teacherProjects = await getProjectsByTeacherId(user.id);
         setProjects(teacherProjects);
+        // Fetch proposal counts for all projects
+        const counts: Record<string, number> = {};
+        await Promise.all(
+          teacherProjects.map(async (project) => {
+            try {
+              const proposals = await getProposalsByProjectId(project.id);
+              counts[project.id] = proposals.length;
+            } catch {
+              counts[project.id] = 0;
+            }
+          })
+        );
+        setProposalCounts(counts);
       }
     };
     fetchData();
@@ -55,6 +72,30 @@ const TeacherDashboard = () => {
     } catch (error) {
       setProjectProposals([]);
     }
+  };
+  
+  const handleDeleteClick = (project: Project) => {
+    setProjectToDelete(project);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (projectToDelete) {
+      setDeleteLoading(true);
+      try {
+        await handleDeleteProject(projectToDelete.id);
+        setDeleteDialogOpen(false);
+        setProjectToDelete(null);
+        handleRefreshData();
+      } finally {
+        setDeleteLoading(false);
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
   };
   
   // Fix: Use project.name instead of project.title due to schema update
@@ -112,7 +153,8 @@ const TeacherDashboard = () => {
                   <ProjectCard
                     key={project.id}
                     project={project}
-                    onDeleteProject={handleDeleteProject}
+                    proposalCount={proposalCounts[project.id] || 0}
+                    onDeleteProject={() => handleDeleteClick(project)}
                     onViewProposals={handleViewProposals}
                   />
                 ))}
@@ -168,6 +210,23 @@ const TeacherDashboard = () => {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تأكيد حذف المشروع</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد أنك تريد حذف المشروع "{projectToDelete?.name}"؟ لا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="destructive" onClick={handleConfirmDelete} disabled={deleteLoading}>
+              {deleteLoading ? "...جاري الحذف" : "حذف"}
+            </Button>
+            <Button variant="outline" onClick={handleCancelDelete} disabled={deleteLoading}>إلغاء</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

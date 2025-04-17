@@ -173,7 +173,7 @@ const StudentDashboard = () => {
               onClick={confirmDeleteProposal}
               className="font-tajwal"
             >
-              نعم، قم بالحذف
+              حذف المقترح
             </Button>
             <Button 
               variant="outline" 

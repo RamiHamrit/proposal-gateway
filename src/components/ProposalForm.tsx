@@ -128,7 +128,7 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
             بتقديمك لهذا المقترح، سيتمكن الأستاذ {project.teacher_name} من مراجعة طلبك والموافقة عليه أو رفضه. يمكنك تقديم مقترحات لما يصل إلى 3 مشاريع.
           </p>
           <textarea
-            className="w-full border rounded p-2 mt-2"
+            className="w-full text-sm border rounded p-2 mt-2"
             rows={5}
             placeholder="اكتب محتوى المقترح هنا..."
             value={content}
@@ -138,10 +138,10 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
         </div>
 
         <DialogFooter className="ltr-buttons">
-          <Button variant="outline" onClick={onCancel}>
+          <Button className="px-4" variant="outline" onClick={onCancel}>
             إلغاء
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button className="px-6" onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? "جاري التقديم..." : "تقديم المقترح"}
           </Button>
         </DialogFooter>

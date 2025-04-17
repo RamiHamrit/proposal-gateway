@@ -48,6 +48,10 @@ export async function createProject(
 
 // Delete a project from Supabase
 export async function deleteProject(id: string): Promise<void> {
+  // Delete all proposals for this project first
+  const { error: proposalError } = await supabase.from('proposals').delete().eq('project_id', id);
+  if (proposalError) throw proposalError;
+  // Now delete the project
   const { error } = await supabase.from('projects').delete().eq('id', id);
   if (error) throw error;
 }

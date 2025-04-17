@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, User } from "lucide-react";
+import { GraduationCap, User, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const Login = () => {
@@ -26,12 +26,14 @@ const Login = () => {
   const [studentPassword, setStudentPassword] = useState("");
   const [studentLoading, setStudentLoading] = useState(false);
   const [studentError, setStudentError] = useState("");
+  const [showStudentPassword, setShowStudentPassword] = useState(false);
   
   // Teacher login state
   const [teacherEmail, setTeacherEmail] = useState("");
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherLoading, setTeacherLoading] = useState(false);
   const [teacherError, setTeacherError] = useState("");
+  const [showTeacherPassword, setShowTeacherPassword] = useState(false);
   
   const { signIn, status } = useAuth();
   
@@ -68,41 +70,41 @@ const Login = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary/30 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-secondary/30 p-4">
+      <Link 
+        to="/" 
+        className="text-primary mb-6 font-medium relative inline-block transition-colors duration-200 after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[1px] after:bg-primary after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:origin-left hover:after:scale-x-100 pb-[2px]"
+      >
+        العودة إلى الصفحة الرئيسية
+      </Link>
       <div className="max-w-md w-full mx-auto">
-        <Link 
-          to="/" 
-          className="flex justify-center mb-8 text-primary hover:underline"
-        >
-          العودة إلى الصفحة الرئيسية
-        </Link>
-        <Card className="w-full animate-fade-in shadow-lg">
-          <CardHeader className="space-y-1 text-center">
+        <Card className="w-full pt-4 rounded-2xl animate-fade-in shadow-lg">
+          <CardHeader className="space-y-1 mb-3 text-center">
             <div className="flex justify-center">
-              <div className="bg-primary/10 p-3 rounded-full">
-                <GraduationCap className="h-6 w-6 text-primary" />
+              <div className="mb-4 bg-primary/10 p-3 rounded-full">
+                <GraduationCap className="h-10 w-10 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-heading">تسجيل الدخول</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-3xl font-heading">تسجيل الدخول</CardTitle>
+            <CardDescription className="text-md font-medium">
               اختر نوع الحساب وأدخل بياناتك لتسجيل الدخول
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <Tabs 
+          <Tabs 
               defaultValue="student" 
               value={activeTab} 
               onValueChange={setActiveTab} 
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="student" className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  <span>طالب</span>
+              <TabsList className="grid w-full grid-cols-2 mb-6 items-center min-h-0 h-auto overflow-hidden">
+                <TabsTrigger value="student" className="flex items-center gap-2 py-2">
+                  <GraduationCap className="h-5 w-5" />
+                  <span className="font-medium text-[1.02rem]">طالب</span>
                 </TabsTrigger>
-                <TabsTrigger value="teacher" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>أستاذ</span>
+                <TabsTrigger value="teacher" className="flex items-center gap-2 py-2">
+                  <User className="h-5 w-5" />
+                  <span className="font-medium text-[1.02rem]">أستاذ</span>
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="student">
@@ -122,15 +124,26 @@ const Login = () => {
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="student-password" className="text-right block w-full">كلمة المرور</Label>
-                      <Input
-                        id="student-password"
-                        type="password"
-                        placeholder="أدخل كلمة المرور"
-                        value={studentPassword}
-                        onChange={(e) => setStudentPassword(e.target.value)}
-                        required
-                        className="text-right placeholder:text-right"
-                      />
+                      <div className="relative">
+                        <Input
+                          id="student-password"
+                          type={showStudentPassword ? "text" : "password"}
+                          placeholder="أدخل كلمة المرور"
+                          value={studentPassword}
+                          onChange={(e) => setStudentPassword(e.target.value)}
+                          required
+                          className="text-right placeholder:text-right"
+                        />
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary focus:outline-none transition-colors transition-transform duration-300 ease-in-out hover:scale-110"
+                          onClick={() => setShowStudentPassword((v) => !v)}
+                          aria-label={showStudentPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                        >
+                          {showStudentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     {studentError && (
                       <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
@@ -160,15 +173,26 @@ const Login = () => {
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="teacher-password" className="text-right block w-full">كلمة المرور</Label>
-                      <Input
-                        id="teacher-password"
-                        type="password"
-                        placeholder="أدخل كلمة المرور للأستاذ"
-                        value={teacherPassword}
-                        onChange={(e) => setTeacherPassword(e.target.value)}
-                        required
-                        className="text-right placeholder:text-right"
-                      />
+                      <div className="relative">
+                        <Input
+                          id="teacher-password"
+                          type={showTeacherPassword ? "text" : "password"}
+                          placeholder="أدخل كلمة المرور للأستاذ"
+                          value={teacherPassword}
+                          onChange={(e) => setTeacherPassword(e.target.value)}
+                          required
+                          className="text-right placeholder:text-right"
+                        />
+                        <button
+                          type="button"
+                          tabIndex={-1}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary focus:outline-none transition-colors transition-transform duration-300 ease-in-out hover:scale-110"
+                          onClick={() => setShowTeacherPassword((v) => !v)}
+                          aria-label={showTeacherPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                        >
+                          {showTeacherPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
                     </div>
                     {teacherError && (
                       <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
@@ -187,7 +211,10 @@ const Login = () => {
             {activeTab === "student" && (
               <div className="text-center text-sm text-muted-foreground">
                 ليس لديك حساب؟{" "}
-                <Link to="/signup" className="text-primary hover:underline">
+                <Link
+                  to="/signup"
+                  className="text-primary font-medium relative inline-block transition-colors duration-200 after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[1px] after:bg-primary after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:origin-left hover:after:scale-x-100 pb-[2px]"
+                >
                   إنشاء حساب جديد
                 </Link>
               </div>

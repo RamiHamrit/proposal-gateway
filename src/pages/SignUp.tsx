@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const SignUp = () => {
@@ -14,6 +14,8 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { signUp } = useAuth();
   
@@ -49,24 +51,23 @@ const SignUp = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary/30 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-secondary/30 p-4">
+      <Link 
+        to="/" 
+        className="text-primary mb-6 font-medium relative inline-block transition-colors duration-200 after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[1px] after:bg-primary after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:origin-left hover:after:scale-x-100 pb-[2px]"
+      >
+        العودة إلى الصفحة الرئيسية
+      </Link>
       <div className="max-w-md w-full">
-        <Link 
-          to="/" 
-          className="flex justify-center mb-8 text-primary hover:underline"
-        >
-          العودة إلى الصفحة الرئيسية
-        </Link>
-        
-        <Card className="w-full animate-fade-in shadow-lg">
-          <CardHeader className="space-y-1 text-center">
+        <Card className="w-full pt-4 rounded-2xl animate-fade-in shadow-lg">
+          <CardHeader className="space-y-1 mb-3 text-center">
             <div className="flex justify-center">
-              <div className="bg-primary/10 p-3 rounded-full">
-                <GraduationCap className="h-6 w-6 text-primary" />
+            <div className="mb-4 bg-primary/10 p-3 rounded-full">
+            <GraduationCap className="h-10 w-10 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-heading">إنشاء حساب طالب</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-3xl font-heading">إنشاء حساب طالب</CardTitle>
+            <CardDescription className="text-md font-medium">
               أدخل بياناتك لإنشاء حساب جديد
             </CardDescription>
           </CardHeader>
@@ -100,27 +101,48 @@ const SignUp = () => {
                 
                 <div className="grid gap-2">
                   <Label htmlFor="password">كلمة المرور</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="أدخل كلمة المرور (8 أحرف على الأقل)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="أدخل كلمة المرور"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary focus:outline-none transition-colors transition-transform duration-300 ease-in-out hover:scale-110"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid gap-2">
                   <Label htmlFor="confirm-password">تأكيد كلمة المرور</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="أعد إدخال كلمة المرور"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="أعد إدخال كلمة المرور"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary focus:outline-none transition-colors transition-transform duration-300 ease-in-out hover:scale-110"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      aria-label={showConfirmPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 
                 {error && (
@@ -139,7 +161,10 @@ const SignUp = () => {
           <CardFooter className="flex justify-center">
             <div className="text-center text-sm text-muted-foreground">
               لديك حساب بالفعل؟{" "}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link
+                to="/login"
+                className="text-primary font-medium relative inline-block transition-colors duration-200 after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[1px] after:bg-primary after:w-full after:scale-x-0 after:transition-transform after:duration-300 after:origin-left hover:after:scale-x-100 pb-[2px]"
+              >
                 تسجيل الدخول
               </Link>
             </div>
