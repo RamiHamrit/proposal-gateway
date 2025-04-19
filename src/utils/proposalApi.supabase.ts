@@ -31,7 +31,20 @@ export async function createProposal(
   project_id: string,
   user_id: string,
   content: string
-): Promise<Proposal> {
+): Promise<Proposal | null> {
+  // Check if user already has a selected proposal (final project)
+  const { data: existingProposals, error: fetchError } = await supabase
+    .from('proposals')
+    .select('*')
+    .eq('user_id', user_id)
+    .eq('status', 'selected');
+  if (fetchError) throw fetchError;
+  if (existingProposals && existingProposals.length > 0) {
+    // User already has a final project, do not allow another
+    return null;
+  }
+
+  // Proceed to create new proposal
   const { data, error } = await supabase
     .from('proposals')
     .insert([
@@ -59,6 +72,29 @@ export async function updateProposalStatus(
   proposalId: string,
   status: 'pending' | 'approved' | 'rejected' | 'selected'
 ): Promise<void> {
+  // First, get the proposal to find the user_id
+  const { data: proposal, error: fetchError } = await supabase
+    .from('proposals')
+    .select('*')
+    .eq('id', proposalId)
+    .single();
+  if (fetchError) throw fetchError;
+  if (!proposal) throw new Error('Proposal not found');
+
+  // If trying to select as final, check if user already has a selected proposal
+  if (status === 'selected' || status === 'approved') {
+    const { data: existingSelected, error: checkError } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('user_id', proposal.user_id)
+      .eq('status', 'selected');
+    if (checkError) throw checkError;
+    // If there is already a selected proposal for this user (and it's not this one), block it
+    if (existingSelected && (existingSelected.length > 0) && !(existingSelected.length === 1 && existingSelected[0].id === proposalId)) {
+      throw new Error('User already has a final project');
+    }
+  }
+
   const { error } = await supabase
     .from('proposals')
     .update({ status })

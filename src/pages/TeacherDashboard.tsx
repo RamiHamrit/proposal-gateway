@@ -116,18 +116,19 @@ const TeacherDashboard = () => {
             </TabsList>
             
             <div className="flex items-center gap-2">
-              <div className="relative w-full md:w-64">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0A2540]/50" />
                 <Input
                   placeholder="البحث في المشاريع..."
-                  className="pr-10"
+                  className="pr-3 rtl:pl-10 text-right placeholder:text-right"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  dir="rtl"
                 />
               </div>
               
               <Button onClick={() => setShowNewProjectForm(true)}>
-                <Plus className="h-4 w-4 ml-2" />
+                <Plus className="h-4 w-4" />
                 مشروع جديد
               </Button>
             </div>
@@ -143,7 +144,7 @@ const TeacherDashboard = () => {
                   onClick={() => setShowNewProjectForm(true)}
                   className="mt-4"
                 >
-                  <Plus className="h-4 w-4 ml-2" />
+                  <Plus className="h-4 w-4" />
                   إنشاء مشروع جديد
                 </Button>
               </div>
@@ -190,20 +191,17 @@ const TeacherDashboard = () => {
                 <p className="text-muted-foreground">لا توجد مقترحات مقدمة لهذا المشروع حتى الآن.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
+              <div className="max-h-[270px] md:max-h-[320px] w-full overflow-y-auto grid grid-cols-1 gap-4 custom-scroll-area pt-6 pb-6 px-3 md:px-6">
                 {projectProposals.map((proposal) => (
                   <ProposalCard
                     key={proposal.id}
                     proposal={proposal}
-                    onStatusChange={async () => {
-                      if (selectedProject) {
-                        try {
-                          const updatedProposals = await getProposalsByProjectId(selectedProject.id);
-                          setProjectProposals(updatedProposals);
-                        } catch {
-                          setProjectProposals([]);
-                        }
-                      }
+                    onStatusChange={async (updatedProposal) => {
+                      setProjectProposals((prev) =>
+                        prev.map((p) =>
+                          p.id === updatedProposal.id ? { ...p, ...updatedProposal } : p
+                        )
+                      );
                     }}
                   />
                 ))}

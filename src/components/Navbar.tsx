@@ -34,7 +34,7 @@ const Navbar = ({ title }: NavbarProps) => {
                 </div>
                 <span className="text-sm font-medium">
                   <span className="font-inter">{user.name}</span>
-                  <span className="text-xs text-[#0A2540]/70 mr-2 font-tajwal">
+                  <span className="text-sm text-[#0A2540]/70 mr-2 font-tajwal">
                     ({user.role === 'student' ? 'طالب' : 'أستاذ'})
                   </span>
                 </span>
@@ -47,7 +47,7 @@ const Navbar = ({ title }: NavbarProps) => {
                   onClick={() => setSettingsOpen(true)}
                   className="text-[#0A2540]/70 hover:text-[#0A2540]"
                 >
-                  <Settings className="h-4 w-4" />
+                  <Settings className="h-8 w-8" />
                 </Button>
               )}
               
@@ -55,9 +55,9 @@ const Navbar = ({ title }: NavbarProps) => {
                 variant="secondary" 
                 size="sm" 
                 onClick={signOut}
-                className="btn-secondary font-tajwal"
+                className="btn-secondary shadow-none outline outline-1 outline-sky-100 hover:shadow-none hover:outline-sky-200 hover:bg-sky-50 font-tajwal"
               >
-                <LogOut className="h-4 w-4 ml-2" />
+                <LogOut className="h-3 w-3 ml-1" />
                 <span>تسجيل الخروج</span>
               </Button>
               
@@ -68,7 +68,7 @@ const Navbar = ({ title }: NavbarProps) => {
           ) : (
             <div className="flex gap-3">
               <Button asChild size="sm" variant="secondary" className="btn-secondary font-tajwal">
-                <Link to="/login"><span>تسجيل الدخول</span></Link>
+                <Link to="/login"><span> الدخول</span></Link>
               </Button>
               <Button asChild size="sm" className="shadow-sm transition-all hover:shadow-md bg-[#635BFF] hover:bg-[#635BFF]/90 font-tajwal">
                 <Link to="/signup"><span>إنشاء حساب</span></Link>

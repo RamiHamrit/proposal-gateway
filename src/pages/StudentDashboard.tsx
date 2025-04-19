@@ -99,14 +99,15 @@ const StudentDashboard = () => {
               </TabsTrigger>
             </TabsList>
             
-            <div className="relative w-full md:w-80">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0A2540]/50" />
+            <div className="relative w-full md:w-[25rem]">
               <Input
                 placeholder="البحث عن مشروع..."
-                className="pr-10"
+                className="pr-3 rtl:pl-10 text-right placeholder:text-right"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                dir="rtl"
               />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0A2540]/50" />
             </div>
           </div>
           
