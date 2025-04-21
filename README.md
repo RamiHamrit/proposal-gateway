@@ -36,11 +36,3 @@ npm run dev
 ```
 
 Open (http://localhost:8080) to view the app in your browser.
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
