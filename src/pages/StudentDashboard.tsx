@@ -143,15 +143,16 @@ const StudentDashboard = () => {
                 <p className="text-[#0A2540]/70">لم تقدم أي مقترحات بعد.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-wrap justify-between gap-y-4" dir="rtl">
                 {proposalsWithProjects.map((proposal) => (
-                  <ProposalCard
-                    key={proposal.id}
-                    proposal={proposal}
-                    projectTitle={proposal.projectTitle}
-                    onStatusChange={handleRefreshData}
-                    onDeleteProposal={() => handleDeleteProposal(proposal)}
-                  />
+                  <div className="w-full md:w-[49%]" key={proposal.id}>
+                    <ProposalCard
+                      proposal={proposal}
+                      projectTitle={proposal.projectTitle}
+                      onStatusChange={handleRefreshData}
+                      onDeleteProposal={() => handleDeleteProposal(proposal)}
+                    />
+                  </div>
                 ))}
               </div>
             )}

@@ -47,6 +47,8 @@ const ProposalCard = ({
   const [pending, setPending] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [studentHasFinal, setStudentHasFinal] = useState<boolean>(false);
+  const [accepting, setAccepting] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
 
   // Check if the student already has a final project
   useEffect(() => {
@@ -191,7 +193,7 @@ const ProposalCard = ({
   return (
     <Card className="overflow-hidden px-3 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(60,60,60,0.08)] hover:-translate-y-1 rounded-xl shadow-sm">
       <CardHeader className="p-4 pb-1 rtl-text">
-        <div className="flex justify-between items-center">
+        <div className="mb-2 mt-1 flex justify-between items-center">
           <CardTitle className="text-md">
             {isTeacher ? (
               <span className="font-inter">
@@ -203,19 +205,22 @@ const ProposalCard = ({
           </CardTitle>
           <div>{getStatusBadge()}</div>
         </div>
-      </CardHeader>
-      
-      <CardContent className="p-4 pt-0 pb-8 rtl-text">
-        <div className="flex flex-wrap items-center gap-2 mt-2 justify-start">
+        <div className="flex justify-start mt-1">
           <Badge variant="outline" className="flex items-center gap-1 font-medium">
             <Calendar size={12} />
             <span>{formattedDate}</span>
           </Badge>
         </div>
+      </CardHeader>
+      
+      <CardContent className="p-4 pt-0 pb-4 rtl-text">
+        <div className="flex flex-wrap items-center gap-2 mt-2 justify-between">
+          <div className="flex-1"></div>
+        </div>
       </CardContent>
       
-      <CardFooter className="p-4 pt-0 flex justify-between items-center gap-2 flex-wrap">
-        <div className="flex gap-2">
+      <CardFooter className="p-4 pt-0 flex items-center gap-2 flex-wrap">
+        <div className="flex gap-2 flex-1">
           {isTeacher && (
             <Button size="sm" variant="outline" onClick={() => setShowContext((v) => !v)}>
               {showContext ? 'إخفاء التفاصيل' : 'قراءة التفاصيل'}
@@ -227,31 +232,45 @@ const ProposalCard = ({
             </Button>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
+          {/* Accept/Reject buttons for teacher, left-aligned */}
+          {isTeacher && hasStatus('pending') && (
+            <>
+              <Button size="sm" onClick={async () => {
+                setAccepting(true);
+                try {
+                  if (studentHasFinal) {
+                    toast({
+                      title: "تنبيه",
+                      description: "لا يمكن الموافقة على هذا المقترح لأن الطالب لديه مشروع نهائي بالفعل!",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  await handleApprove();
+                } finally {
+                  setAccepting(false);
+                }
+              }} disabled={pending || accepting} title={studentHasFinal ? "الطالب لديه مشروع نهائي بالفعل" : undefined}>
+                {accepting ? 'جاري الموافقة...' : 'موافقة'}
+              </Button>
+              <Button size="sm" variant="destructive" onClick={async () => {
+                setRejecting(true);
+                try {
+                  await handleReject();
+                } finally {
+                  setRejecting(false);
+                }
+              }} disabled={pending || rejecting}>
+                {rejecting ? 'جاري الرفض...' : 'رفض'}
+              </Button>
+            </>
+          )}
+          {/* Student delete button */}
           {isStudent && (hasStatus('pending') || hasStatus('rejected') || hasStatus('approved')) && (
             <Button size="sm" variant="destructive" onClick={handleDelete} disabled={pending}>
               حذف المقترح
             </Button>
-          )}
-          {isTeacher && hasStatus('pending') && !pending && (
-            <>
-              <Button size="sm" onClick={async () => {
-                if (studentHasFinal) {
-                  toast({
-                    title: "تنبيه",
-                    description: "لا يمكن الموافقة على هذا المقترح لأن الطالب لديه مشروع نهائي بالفعل!",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-                await handleApprove();
-              }} disabled={pending} title={studentHasFinal ? "الطالب لديه مشروع نهائي بالفعل" : undefined}>
-                موافقة
-              </Button>
-              <Button size="sm" variant="destructive" onClick={handleReject} disabled={pending}>
-                رفض
-              </Button>
-            </>
           )}
         </div>
       </CardFooter>
