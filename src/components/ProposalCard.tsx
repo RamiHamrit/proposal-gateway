@@ -62,15 +62,15 @@ const ProposalCard = ({
   const handleApprove = async () => {
     setPending(true);
     try {
-      // Check if there are already approved proposals for this project
+      // Check if there is already a selected proposal for this project (final project)
       const projectProposals = await getProposalsByProjectId(getProposalField(proposal, 'project_id') || getProposalField(proposal, 'projectId'));
-      const hasApprovedProposal = projectProposals.some(
-        p => (p.status === 'approved' || p.status === 'selected') && p.id !== getProposalField(proposal, 'id')
+      const hasSelectedProposal = projectProposals.some(
+        p => p.status === 'selected'
       );
-      if (hasApprovedProposal) {
+      if (hasSelectedProposal) {
         toast({
           title: "تنبيه",
-          description: "تمت الموافقة بالفعل على مقترح آخر لهذا المشروع.",
+          description: "المشروع تم اختياره بالفعل كمشروع نهائي. لا يمكن الموافقة على مقترحات أخرى.",
           variant: "destructive"
         });
         setPending(false);
@@ -138,6 +138,12 @@ const ProposalCard = ({
           description: "لقد قمت باختيار مشروع نهائي بالفعل!",
           variant: "destructive"
         });
+      } else if (error.message && error.message.includes('Project already selected as final project by another student')) {
+        toast({
+          title: "تنبيه",
+          description: "المشروع تم اختياره بالفعل كمشروع نهائي من قبل طالب آخر!",
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "حدث خطأ",
@@ -184,9 +190,8 @@ const ProposalCard = ({
 
   return (
     <Card className="overflow-hidden px-3 transition-all duration-300 hover:shadow-[0_8px_32px_rgba(60,60,60,0.08)] hover:-translate-y-1 rounded-xl shadow-sm">
-      <CardHeader className="p-4 rtl-text">
+      <CardHeader className="p-4 pb-1 rtl-text">
         <div className="flex justify-between items-center">
-          <div>{getStatusBadge()}</div>
           <CardTitle className="text-md">
             {isTeacher ? (
               <span className="font-inter">
@@ -196,11 +201,12 @@ const ProposalCard = ({
               <span className={isArabic(projectTitle || "") ? "font-tajwal" : "font-inter"}>{projectTitle}</span>
             )}
           </CardTitle>
+          <div>{getStatusBadge()}</div>
         </div>
       </CardHeader>
       
-      <CardContent className="p-4 pt-0 rtl-text">
-        <div className="flex flex-wrap items-center gap-2 mt-2 justify-end">
+      <CardContent className="p-4 pt-0 pb-8 rtl-text">
+        <div className="flex flex-wrap items-center gap-2 mt-2 justify-start">
           <Badge variant="outline" className="flex items-center gap-1 font-medium">
             <Calendar size={12} />
             <span>{formattedDate}</span>
@@ -209,17 +215,22 @@ const ProposalCard = ({
       </CardContent>
       
       <CardFooter className="p-4 pt-0 flex justify-between items-center gap-2 flex-wrap">
-        <div>
-          {isStudent && (hasStatus('pending') || hasStatus('rejected')) && (
-            <Button size="sm" variant="destructive" onClick={handleDelete} disabled={pending}>
-              حذف المقترح
-            </Button>
-          )}
-        </div>
         <div className="flex gap-2">
           {isTeacher && (
             <Button size="sm" variant="outline" onClick={() => setShowContext((v) => !v)}>
               {showContext ? 'إخفاء التفاصيل' : 'قراءة التفاصيل'}
+            </Button>
+          )}
+          {isStudent && hasStatus('approved') && (
+            <Button size="sm" onClick={handleSelect} disabled={pending}>
+              اختيار كمشروع نهائي
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-2">
+          {isStudent && (hasStatus('pending') || hasStatus('rejected') || hasStatus('approved')) && (
+            <Button size="sm" variant="destructive" onClick={handleDelete} disabled={pending}>
+              حذف المقترح
             </Button>
           )}
           {isTeacher && hasStatus('pending') && !pending && (
@@ -242,24 +253,18 @@ const ProposalCard = ({
               </Button>
             </>
           )}
-          {isStudent && hasStatus('approved') && (
-            <Button size="sm" onClick={handleSelect} disabled={pending}>
-              اختيار كمشروع نهائي
-            </Button>
-          )}
         </div>
       </CardFooter>
       {isTeacher && (
         <div
-          className={`transition-all duration-500 overflow-hidden ${showContext ? 'opacity-100 max-h-96 mt-4' : 'opacity-0 max-h-0'}`}
-          style={{}}
+          className={`transition-all duration-500 ease-in-out overflow-hidden ${
+            showContext ? 'opacity-100 max-h-[200px]' : 'opacity-0 max-h-0'
+          }`}
         >
-          {showContext && (
-            <div className="p-4 pt-4 rtl-text text-right border-t text-sm text-muted-foreground bg-muted/20">
-              <div className="font-bold mb-1">تفاصيل المقترح:</div>
-              <div>{getProposalField(proposal, 'content') || 'لا يوجد تفاصيل.'}</div>
-            </div>
-          )}
+          <div className="p-4 pt-4 rtl-text text-right border-t text-sm text-muted-foreground bg-muted/20">
+            <div className="font-bold mb-1">تفاصيل المقترح:</div>
+            <div>{getProposalField(proposal, 'content') || 'لا يوجد تفاصيل.'}</div>
+          </div>
         </div>
       )}
     </Card>

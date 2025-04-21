@@ -95,6 +95,20 @@ export async function updateProposalStatus(
     }
   }
 
+  // NEW CHECK: If trying to select as final, ensure no other proposal for this project is already selected by another student
+  if (status === 'selected') {
+    const { data: projectSelected, error: projectSelectedError } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('project_id', proposal.project_id)
+      .eq('status', 'selected');
+    if (projectSelectedError) throw projectSelectedError;
+    // If there is a selected proposal for this project (not this one), block it
+    if (projectSelected && (projectSelected.length > 0) && !(projectSelected.length === 1 && projectSelected[0].id === proposalId)) {
+      throw new Error('Project already selected as final project by another student');
+    }
+  }
+
   const { error } = await supabase
     .from('proposals')
     .update({ status })

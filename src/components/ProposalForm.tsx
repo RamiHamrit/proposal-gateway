@@ -125,12 +125,12 @@ const ProposalForm = ({ project, onSubmit, onCancel }: ProposalFormProps) => {
 
         <div className="py-4 space-y-4">
           <p className="text-sm font-medium text-muted-foreground rtl-text">
-            بتقديمك لهذا المقترح، سيتمكن الأستاذ {project.teacher_name} من مراجعة طلبك والموافقة عليه أو رفضه. يمكنك تقديم مقترحات لما يصل إلى 3 مشاريع.
+            بتقديمك لهذا المقترح، سيتمكن الأستاذ {project.teacher_name} من مراجعة طلبك والموافقة عليه أو رفضه.
           </p>
           <textarea
             className="w-full text-sm border rounded p-2 mt-2"
             rows={5}
-            placeholder="اكتب محتوى المقترح هنا..."
+            placeholder="اكتب رقمي تسجيل الطالبين المقترحين هنا..."
             value={content}
             onChange={e => setContent(e.target.value)}
             required
